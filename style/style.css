@@ -1,0 +1,33 @@
+.documentationModal {
+    width: 95%;
+    height: 80%;
+}
+
+#documentationButtons {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+#documentationButtons button {
+    font-size: 16px;
+    margin-left: 6px;
+}
+
+.modal-content, .modal-body {
+    height: 100%;
+}
+
+input[id$="-documentation"] {
+    width: 90% !important;
+    height: 25px !important;
+}
+
+.openRichTextEditor {
+    width: 10% !important;
+    height: 25px !important;
+}
+
+.openRichTextEditor span {
+    display: block !important;
+    font-style: italic;
+}
