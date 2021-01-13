@@ -105,11 +105,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const OPEN_RICH_TEXT_EDITOR_ACTION = 'open-rich-text-editor';
 
-const wysiwyg = function (translate, eventBus, commandStack, bpmnFactory, entry) {
-  let label = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["query"])('label', entry.html).innerHTML;
-  let modelProperty = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["query"])('div#camunda-' + entry.id, entry.html).getAttribute('name');
+const wysiwygDecorator = function (translate, eventBus, commandStack, bpmnFactory, entry) {
+  let htmlObject = entry.html;
+
+  if (typeof entry.html === 'string') {
+    htmlObject = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["domify"])(entry.html);
+  }
+
+  let label = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["query"])('label', htmlObject).innerHTML;
+  let modelProperty = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["query"])('div#camunda-' + entry.id, htmlObject).getAttribute('name');
 
   let getValue = function (businessObject) {
     let documentations = businessObject && businessObject.get('documentation'),
@@ -139,14 +144,7 @@ const wysiwyg = function (translate, eventBus, commandStack, bpmnFactory, entry)
     }
 
     return businessObject;
-  }; // let saveData = function (event, resolve) {
-  //     return function (event) {
-  //         const { element, data } = event;
-  //         resolve({ element: element, values: { documentation: data } })
-  //         return false;
-  //     }
-  // }
-
+  };
 
   let replacedText = bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default.a.textField(translate, {
     label: label,
@@ -200,7 +198,7 @@ const wysiwyg = function (translate, eventBus, commandStack, bpmnFactory, entry)
   return replacedText;
 };
 
-/* harmony default export */ __webpack_exports__["default"] = (wysiwyg);
+/* harmony default export */ __webpack_exports__["default"] = (wysiwygDecorator);
 
 /***/ }),
 
@@ -217,15 +215,6 @@ __webpack_require__.r(__webpack_exports__);
 
 /**
  * A bpmn-js module, defining all extension services and their dependencies.
- *
- * --------
- *
- * WARNING: This is an example only.
- *
- * Make sure you choose a unique name under which your extension service
- * is exposed (i.e. change PLEASE_CHANGE_ME to something unique).
- *
- * --------
  *
  */
 
@@ -326,7 +315,7 @@ __webpack_require__.r(__webpack_exports__);
 const documentationEditor = props => {
   function uploadImageCallBack(file) {
     return new Promise((resolve, reject) => {
-      var reader = new FileReader();
+      const reader = new FileReader();
       let img = new Image(); // let url = ''
 
       reader.onload = function (e) {

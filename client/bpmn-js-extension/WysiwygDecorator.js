@@ -1,14 +1,19 @@
-import { query as domQuery } from 'min-dom';
+import { query as domQuery, domify} from 'min-dom';
 
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 
-const wysiwyg = function (translate, eventBus, commandStack, bpmnFactory, entry) {
+const wysiwygDecorator = function (translate, eventBus, commandStack, bpmnFactory, entry) {
 
-    let label = domQuery('label', entry.html).innerHTML;
-    let modelProperty = domQuery('div#camunda-' + entry.id, entry.html).getAttribute('name');
+    let htmlObject = entry.html;
+    if (typeof entry.html==='string') {
+        htmlObject = domify(entry.html);
+    }
+
+    let label = domQuery('label', htmlObject).innerHTML;
+    let modelProperty = domQuery('div#camunda-' + entry.id, htmlObject).getAttribute('name');
 
     let getValue = function (businessObject) {
         let documentations = businessObject && businessObject.get('documentation'),
@@ -76,4 +81,4 @@ const wysiwyg = function (translate, eventBus, commandStack, bpmnFactory, entry)
     return replacedText;
 }
 
-export default wysiwyg;
+export default wysiwygDecorator;

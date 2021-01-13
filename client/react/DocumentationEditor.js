@@ -8,7 +8,7 @@ const documentationEditor = (props) => {
     function uploadImageCallBack(file) {
         return new Promise(
             (resolve, reject) => {
-                var reader = new FileReader();
+                const reader = new FileReader();
                 let img = new Image();
                 // let url = ''
                 reader.onload = function (e) {
