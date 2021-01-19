@@ -7,7 +7,8 @@
     "all": "run-s bundle",
     "bundle": "webpack",
     "dev": "webpack -w",
-    "prepublishOnly": "run-s bundle"
+    "prepublishOnly": "run-s bundle",
+    "test": "karma start"
   },
   "repository": {
     "type": "git",
@@ -26,11 +27,21 @@
     "@babel/preset-react": "^7.12.7",
     "babel-loader": "^8.2.2",
     "camunda-modeler-plugin-helpers": "^3.4.0-alpha.1",
+    "chai": "^4.2.0",
     "css-loader": "^5.0.1",
     "eslint": "^7.14.0",
     "eslint-plugin-bpmn-io": "^0.11.0",
     "file-loader": "^6.2.0",
+    "karma": "^5.2.3",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-mocha": "^2.0.1",
+    "karma-sinon-chai": "^2.0.2",
+    "karma-webpack": "^4.0.2",
+    "mocha": "^8.2.1",
+    "mocha-test-container-support": "^0.2.0",
     "npm-run-all": "^4.1.5",
+    "sinon": "^9.2.2",
+    "sinon-chai": "^3.5.0",
     "style-loader": "^2.0.0",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.7"
