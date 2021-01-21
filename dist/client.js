@@ -638,7 +638,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var _bpmn_js_extension_exporter_exporter__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../bpmn-js-extension/exporter/exporter */ "./client/bpmn-js-extension/exporter/exporter.js");
+/* harmony import */ var _exportUtils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./exportUtils */ "./client/react/ExportButton/exportUtils.js");
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 
 
 
@@ -656,36 +658,13 @@ class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTE
   constructor(props) {
     super(props);
 
-    _defineProperty(this, "hasDocumentation", element => {
-      let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["getBusinessObject"])(element);
-      const documentation = bo.get('documentation');
-      return documentation.length > 0;
-    });
-
     _defineProperty(this, "exportDiagram", modeler => {
-      const elementRegistry = modeler.get('elementRegistry');
-      const elements = elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element));
-      const startElement = elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(element, 'bpmn:StartEvent') && element.type !== 'label' && !Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(element.parent, 'bpmn:SubProcess')); // console.log(this.stringify({ elements: elements}, 2, null, 2));
+      const elementRegistry = modeler.get('elementRegistry'); // Ottengo tutti gli elementi che presentano documentazione
+
+      let utils = new _exportUtils__WEBPACK_IMPORTED_MODULE_6__["default"](elementRegistry);
+      const elements = utils.getAllElements(); // console.log(this.stringify({ elements: elements}, 2, null, 2));
 
       console.log(Object(_bpmn_js_extension_exporter_exporter__WEBPACK_IMPORTED_MODULE_5__["default"])(elements).export());
-    });
-
-    _defineProperty(this, "stringify", function (val, depth, replacer, space) {
-      depth = isNaN(+depth) ? 1 : depth;
-
-      function _build(key, val, depth, o, a) {
-        // (JSON.stringify() has it's own rules, which we respect here by using it for property iteration)
-        return !val || typeof val != 'object' ? val : (a = Array.isArray(val), JSON.stringify(val, function (k, v) {
-          if (a || depth > 0) {
-            if (replacer) v = replacer(k, v);
-            if (!k) return a = Array.isArray(v), val = v;
-            !o && (o = a ? [] : {});
-            o[k] = _build(k, v, a ? depth : depth - 1);
-          }
-        }), o || (a ? [] : {}));
-      }
-
-      return JSON.stringify(_build('', val, depth), null, space);
     });
 
     this.state = defaultState;
@@ -761,6 +740,87 @@ class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTE
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (ExportButton);
+
+/***/ }),
+
+/***/ "./client/react/ExportButton/exportUtils.js":
+/*!**************************************************!*\
+  !*** ./client/react/ExportButton/exportUtils.js ***!
+  \**************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
+class exportUtils {
+  constructor(elementRegistry) {
+    _defineProperty(this, "hasDocumentation", element => {
+      let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
+      const documentation = bo.get('documentation');
+      return documentation.length > 0;
+    });
+
+    _defineProperty(this, "getStartEvents", () => {
+      return this._elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:StartEvent') && element.type !== 'label' && !Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element.parent, 'bpmn:SubProcess'));
+    });
+
+    _defineProperty(this, "getAllElements", () => {
+      return this._elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element));
+    });
+
+    _defineProperty(this, "navigateFromStartEvent", startEvent => {
+      let elementsArray = [startEvent];
+
+      function getElementOutgoings(element) {
+        let outgoingSequenceFlows = element.outgoing.filter(outgoing => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(outgoing, 'bpmn:SequenceFlow'));
+        return outgoingSequenceFlows.map(outgoing => outgoing.target);
+      }
+
+      function pushOutgoings(element, outgoingElementArray) {
+        elementsArray.push(outgoingElementArray);
+
+        if (Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:EndEvent')) {
+          return [];
+        }
+
+        outgoingElementArray = outgoingElementArray.map(elementOut => getElementOutgoings(elementOut));
+        return outgoingElementArray;
+      }
+
+      let outgoingElementArray = getElementOutgoings(startEvent);
+      pushOutgoings(startEvent, outgoingElementArray);
+      return elementsArray;
+    });
+
+    _defineProperty(this, "stringify", function (val, depth, replacer, space) {
+      depth = isNaN(+depth) ? 1 : depth;
+
+      function _build(key, val, depth, o, a) {
+        // (JSON.stringify() has it's own rules, which we respect here by using it for property iteration)
+        return !val || typeof val != 'object' ? val : (a = Array.isArray(val), JSON.stringify(val, function (k, v) {
+          if (a || depth > 0) {
+            if (replacer) v = replacer(k, v);
+            if (!k) return a = Array.isArray(v), val = v;
+            !o && (o = a ? [] : {});
+            o[k] = _build(k, v, a ? depth : depth - 1);
+          }
+        }), o || (a ? [] : {}));
+      }
+
+      return JSON.stringify(_build('', val, depth), null, space);
+    });
+
+    this._elementRegistry = elementRegistry;
+  }
+
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (exportUtils);
 
 /***/ }),
 
