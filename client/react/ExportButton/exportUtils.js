@@ -26,24 +26,28 @@ class exportUtils {
   };
 
   navigateFromStartEvent = (startEvent) => {
-    let elementsArray = [startEvent];
+    if (!startEvent) {
+      return [];
+    }
 
     function getElementOutgoings(element) {
       let outgoingSequenceFlows = element.outgoing.filter(outgoing => is(outgoing, 'bpmn:SequenceFlow'));
       return outgoingSequenceFlows.map(outgoing => outgoing.target);
     }
 
-    function pushOutgoings(element, outgoingElementArray) {
-      elementsArray.push(outgoingElementArray);
-      if (is(element, 'bpmn:EndEvent')) {
-        return [];
-      }
-      outgoingElementArray = outgoingElementArray.map(elementOut => getElementOutgoings(elementOut));
-      return outgoingElementArray;
-    }
+    const elementsArray = [];
+    const visited = {};
 
-    let outgoingElementArray = getElementOutgoings(startEvent);
-    pushOutgoings(startEvent, outgoingElementArray);
+    (function dfs(element) {
+      if (!element) return null;
+      visited[element.id] = true;
+      elementsArray.push(element);
+      getElementOutgoings(element).forEach(neighbour => {
+        if (!visited[neighbour.id]) {
+          return dfs(neighbour);
+        }
+      });
+    })(startEvent);
 
     return elementsArray;
   };

@@ -4,7 +4,7 @@ import { Fill } from 'camunda-modeler-plugin-helpers/components';
 import classNames from 'classnames';
 
 import { find } from 'lodash';
-import exporter from '../../bpmn-js-extension/exporter/exporter';
+import exporter from '../../utils/exporter/exporter';
 import exportUtils from './exportUtils';
 
 const defaultState = {

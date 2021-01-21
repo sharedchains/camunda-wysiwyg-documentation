@@ -1,6 +1,7 @@
 'use strict';
 var path = require('path');
 var absoluteBasePath = path.resolve(__dirname);
+
 // var coverage = process.env.COVERAGE;
 // var suite = coverage ? 'test/all.js' : 'test/suite.js';
 
