@@ -17,7 +17,7 @@ const wysiwygDecorator = function(translate, eventBus, commandStack, bpmnFactory
 
   let getValue = function(businessObject) {
     let documentations = businessObject && businessObject.get('documentation'),
-      text = (documentations && documentations.length > 0) ? documentations[0].text : '';
+        text = (documentations && documentations.length > 0) ? documentations[0].text : '';
 
     return { documentation: text };
   };

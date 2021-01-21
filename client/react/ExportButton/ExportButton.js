@@ -62,7 +62,7 @@ class ExportButton extends Component {
 
     // Ottengo tutti gli elementi che presentano documentazione
     let utils = new exportUtils(elementRegistry);
-    const elements = utils.getAllElements();
+    const elements = utils.getAllElementsWithDocumentation();
 
     // console.log(this.stringify({ elements: elements}, 2, null, 2));
     console.log(exporter(elements).export());

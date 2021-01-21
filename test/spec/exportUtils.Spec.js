@@ -1,6 +1,13 @@
 import exportUtils from '../../client/react/ExportButton/exportUtils';
 
-describe('Test element navigation from startEvent', () => {
+import Modeler from 'bpmn-js/lib/Modeler';
+
+import {
+  bootstrapModeler,
+  inject
+} from 'test/TestHelper';
+
+describe('Test element navigation from a fake startEvent', () => {
 
   const utils = new exportUtils(undefined);
 
@@ -177,4 +184,98 @@ describe('Test element navigation from startEvent', () => {
     let resultArray = utils.navigateFromStartEvent(startEvent);
     expect(resultArray).to.be.an('array').to.have.lengthOf(6);
   });
+});
+
+import simpleDiagram from './simple.bpmn';
+import subProcessDiagram from './subprocess.bpmn';
+import boundaryEventDiagram from './boundary-event.bpmn';
+import completionDiagram from './completion.bpmn';
+
+describe('Test element navigation from real BPMNs', () => {
+  describe('simple', () => {
+
+    let startEvent;
+    let utils;
+
+    beforeEach(bootstrapModeler(simpleDiagram, {
+      additionalModules: [].concat(Modeler.prototype._modules)
+    }));
+
+    beforeEach(inject(function(elementRegistry) {
+      utils = new exportUtils(elementRegistry);
+      startEvent = elementRegistry.get('StartEvent_1');
+    }));
+
+    it('should navigate through 9 elements', function(done) {
+      let resultArray = utils.navigateFromStartEvent(startEvent);
+      expect(resultArray).to.be.an('array').to.have.lengthOf(9);
+      done();
+    });
+  });
+
+  describe('subprocess', () => {
+
+    let startEvent;
+    let utils;
+
+    beforeEach(bootstrapModeler(subProcessDiagram, {
+      additionalModules: [].concat(Modeler.prototype._modules)
+    }));
+
+    beforeEach(inject(function(elementRegistry) {
+      utils = new exportUtils(elementRegistry);
+      startEvent = elementRegistry.get('StartEvent_1');
+    }));
+
+    it('should navigate through 6 elements', function(done) {
+      let resultArray = utils.navigateFromStartEvent(startEvent);
+      expect(resultArray).to.be.an('array').to.have.lengthOf(6);
+      done();
+    });
+  });
+
+  describe('boundaryEvent', () => {
+
+    let startEvent;
+    let utils;
+
+    beforeEach(bootstrapModeler(boundaryEventDiagram, {
+      additionalModules: [].concat(Modeler.prototype._modules)
+    }));
+
+    beforeEach(inject(function(elementRegistry) {
+      utils = new exportUtils(elementRegistry);
+      startEvent = elementRegistry.get('StartEvent');
+    }));
+
+    it('should navigate through 10 elements', function(done) {
+      let resultArray = utils.navigateFromStartEvent(startEvent);
+
+      expect(resultArray).to.be.an('array').to.have.lengthOf(10);
+      done();
+    });
+  });
+
+  describe('completion', () => {
+
+    let startEvent;
+    let utils;
+
+    beforeEach(bootstrapModeler(completionDiagram, {
+      additionalModules: [].concat(Modeler.prototype._modules)
+    }));
+
+    beforeEach(inject(function(elementRegistry) {
+      utils = new exportUtils(elementRegistry);
+      startEvent = elementRegistry.get('StartEvent');
+    }));
+
+    it('should navigate through 8 elements', function(done) {
+      let resultArray = utils.navigateFromStartEvent(startEvent);
+
+      expect(resultArray).to.be.an('array').to.have.lengthOf(8);
+      done();
+    });
+  });
+
 });

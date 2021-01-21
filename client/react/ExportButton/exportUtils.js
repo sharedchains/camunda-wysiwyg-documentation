@@ -19,9 +19,15 @@ class exportUtils {
       !is(element.parent, 'bpmn:SubProcess'));
   };
 
-  getAllElements = () => {
+  getAllElementsWithDocumentation = () => {
     return this._elementRegistry.filter(
       (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element)
+    );
+  };
+
+  getAllElements = () => {
+    return this._elementRegistry.filter(
+      (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label'
     );
   };
 
@@ -42,6 +48,19 @@ class exportUtils {
       if (!element) return null;
       visited[element.id] = true;
       elementsArray.push(element);
+      if (is(element, 'bpmn:SubProcess')) {
+        let subStartEvent = element.children.filter(function(child) {
+          return is(child, 'bpmn:StartEvent');
+        })[0];
+        let subProcessElements = dfs(subStartEvent);
+        elementsArray.concat(subProcessElements);
+      }
+      if (element.attachers && element.attachers.length > 0) {
+        element.attachers.forEach(attached => {
+          let boundaryElements = dfs(attached);
+          elementsArray.concat(boundaryElements);
+        });
+      }
       getElementOutgoings(element).forEach(neighbour => {
         if (!visited[neighbour.id]) {
           return dfs(neighbour);

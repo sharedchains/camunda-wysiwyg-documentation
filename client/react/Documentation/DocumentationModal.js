@@ -19,7 +19,7 @@ const documentationModal = (props) => {
     </Body>
     <Footer>
       <div id="documentationButtons">
-        <button type="submit" class="btn btn-secondary" form="documentationForm">Close</button>
+        <button type="submit" className="btn btn-secondary" form="documentationForm">Close</button>
       </div>
     </Footer>
   </Modal>;

@@ -25,6 +25,7 @@ export default class WysiwygFragment extends PureComponent {
   }
 
   componentDidMount() {
+
     /**
      * The component props include everything the Application offers plugins,
      * which includes:
