@@ -1,4 +1,8 @@
 'use strict';
+var path = require('path');
+var absoluteBasePath = path.resolve(__dirname);
+// var coverage = process.env.COVERAGE;
+// var suite = coverage ? 'test/all.js' : 'test/suite.js';
 
 // configures browsers to run test against
 // any of [ 'ChromeHeadless', 'Chrome', 'Firefox', 'IE', 'PhantomJS' ]
@@ -45,9 +49,35 @@ module.exports = function(karma) {
       module: {
         rules: [
           {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            use: {
+              loader: 'babel-loader',
+              options: {
+                presets: ['@babel/preset-react']
+              }
+            }
+          },
+          {
             test: /\.(css|bpmn)$/,
             use: 'raw-loader'
+          },
+          {
+            test: /\.png$/,
+            use: 'url-loader'
           }
+        ]
+      },
+      resolve: {
+        mainFields: [
+          'dev:module',
+          'browser',
+          'module',
+          'main'
+        ],
+        modules: [
+          'node_modules',
+          absoluteBasePath
         ]
       }
     }

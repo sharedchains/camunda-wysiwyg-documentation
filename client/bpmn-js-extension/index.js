@@ -5,6 +5,6 @@ import WysiwygPropertiesProvider from './propertiesProvider/WysiwygPropertiesPro
  *
  */
 export default {
-  __init__: [ 'WysiwygPropertiesProvider' ],
-  WysiwygPropertiesProvider: [ 'type', WysiwygPropertiesProvider ]
+  __init__: ['WysiwygPropertiesProvider'],
+  WysiwygPropertiesProvider: ['type', WysiwygPropertiesProvider]
 };
