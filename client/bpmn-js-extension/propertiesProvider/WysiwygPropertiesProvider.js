@@ -2,8 +2,8 @@ import inherits from 'inherits';
 
 import PropertiesActivator from 'bpmn-js-properties-panel/lib/PropertiesActivator';
 
-import { find } from 'lodash';
-import wysiwygDecorator from '../WysiwygDecorator';
+import {find} from 'lodash';
+import wysiwygDecorator from './wysiwygDecorator';
 
 export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, propertiesProvider) {
     PropertiesActivator.call(this, eventBus);
@@ -16,8 +16,7 @@ export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFa
         let documentationTab = find(generalTab.groups, { id: 'documentation' });
         if (documentationTab) {
             documentationTab.entries = documentationTab.entries.map(entry => {
-                let newField = wysiwygDecorator(translate, eventBus, commandStack, bpmnFactory, entry);
-                return newField;
+                return wysiwygDecorator(translate, eventBus, commandStack, bpmnFactory, entry);
             });
         }
         return array;

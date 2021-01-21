@@ -86,10 +86,140 @@
 /************************************************************************/
 /******/ ({
 
-/***/ "./client/bpmn-js-extension/WysiwygDecorator.js":
-/*!******************************************************!*\
-  !*** ./client/bpmn-js-extension/WysiwygDecorator.js ***!
-  \******************************************************/
+/***/ "./client/bpmn-js-extension/exporter/exporter.js":
+/*!*******************************************************!*\
+  !*** ./client/bpmn-js-extension/exporter/exporter.js ***!
+  \*******************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+
+/*
+* Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
+* Each element of the array is an object node from bpmn-js
+* */
+
+const exporter = hierarchy => {
+  let docIndexes = '';
+  let docHierarchy = '';
+  hierarchy.forEach(element => {
+    const bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
+    const elementId = element.id;
+    const elementName = bo.get('name');
+    const documentation = bo.get('documentation');
+
+    if (documentation.length > 0) {
+      const anchorLink = `<a href="#${elementId}">${elementName || elementId}</a><br/>`;
+      docIndexes += anchorLink;
+      const docText = bo.get('documentation')[0].get('text');
+      const anchoredText = `<h1><a name=${elementId}></a>${elementName || elementId}</h1>${docText}<br/>`;
+      docHierarchy += anchoredText;
+    }
+  });
+
+  let getDocumentation = function () {
+    return docIndexes + docHierarchy;
+  };
+
+  let exportDocumentation = function () {
+    return `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Documentation</title>
+</head>
+<body>
+    ${getDocumentation()}
+</body>`;
+  };
+
+  return {
+    'export': exportDocumentation
+  };
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (exporter);
+
+/***/ }),
+
+/***/ "./client/bpmn-js-extension/index.js":
+/*!*******************************************!*\
+  !*** ./client/bpmn-js-extension/index.js ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./propertiesProvider/WysiwygPropertiesProvider */ "./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js");
+
+/**
+ * A bpmn-js module, defining all extension services and their dependencies.
+ *
+ */
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  __init__: ['WysiwygPropertiesProvider'],
+  WysiwygPropertiesProvider: ['type', _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__["default"]]
+});
+
+/***/ }),
+
+/***/ "./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js":
+/*!**********************************************************************************!*\
+  !*** ./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js ***!
+  \**********************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return WysiwygPropertiesProvider; });
+/* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! inherits */ "./node_modules/inherits/inherits_browser.js");
+/* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(inherits__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/PropertiesActivator */ "./node_modules/bpmn-js-properties-panel/lib/PropertiesActivator.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./wysiwygDecorator */ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js");
+
+
+
+
+function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, propertiesProvider) {
+  bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default.a.call(this, eventBus);
+  let camundaGetTabs = propertiesProvider.getTabs;
+
+  propertiesProvider.getTabs = function (element) {
+    var array = camundaGetTabs(element);
+    let generalTab = Object(lodash__WEBPACK_IMPORTED_MODULE_2__["find"])(array, {
+      id: 'general'
+    });
+    let documentationTab = Object(lodash__WEBPACK_IMPORTED_MODULE_2__["find"])(generalTab.groups, {
+      id: 'documentation'
+    });
+
+    if (documentationTab) {
+      documentationTab.entries = documentationTab.entries.map(entry => {
+        return Object(_wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__["default"])(translate, eventBus, commandStack, bpmnFactory, entry);
+      });
+    }
+
+    return array;
+  };
+}
+inherits__WEBPACK_IMPORTED_MODULE_0___default()(WysiwygPropertiesProvider, bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default.a);
+WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'propertiesProvider'];
+
+/***/ }),
+
+/***/ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js":
+/*!*************************************************************************!*\
+  !*** ./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js ***!
+  \*************************************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -202,78 +332,6 @@ const wysiwygDecorator = function (translate, eventBus, commandStack, bpmnFactor
 
 /***/ }),
 
-/***/ "./client/bpmn-js-extension/index.js":
-/*!*******************************************!*\
-  !*** ./client/bpmn-js-extension/index.js ***!
-  \*******************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./propertiesProvider/WysiwygPropertiesProvider */ "./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js");
-
-/**
- * A bpmn-js module, defining all extension services and their dependencies.
- *
- */
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-  __init__: ['WysiwygPropertiesProvider'],
-  WysiwygPropertiesProvider: ['type', _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__["default"]]
-});
-
-/***/ }),
-
-/***/ "./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js":
-/*!**********************************************************************************!*\
-  !*** ./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js ***!
-  \**********************************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return WysiwygPropertiesProvider; });
-/* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! inherits */ "./node_modules/inherits/inherits_browser.js");
-/* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(inherits__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/PropertiesActivator */ "./node_modules/bpmn-js-properties-panel/lib/PropertiesActivator.js");
-/* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _WysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../WysiwygDecorator */ "./client/bpmn-js-extension/WysiwygDecorator.js");
-
-
-
-
-function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, propertiesProvider) {
-  bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default.a.call(this, eventBus);
-  let camundaGetTabs = propertiesProvider.getTabs;
-
-  propertiesProvider.getTabs = function (element) {
-    var array = camundaGetTabs(element);
-    let generalTab = Object(lodash__WEBPACK_IMPORTED_MODULE_2__["find"])(array, {
-      id: 'general'
-    });
-    let documentationTab = Object(lodash__WEBPACK_IMPORTED_MODULE_2__["find"])(generalTab.groups, {
-      id: 'documentation'
-    });
-
-    if (documentationTab) {
-      documentationTab.entries = documentationTab.entries.map(entry => {
-        let newField = Object(_WysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__["default"])(translate, eventBus, commandStack, bpmnFactory, entry);
-        return newField;
-      });
-    }
-
-    return array;
-  };
-}
-inherits__WEBPACK_IMPORTED_MODULE_0___default()(WysiwygPropertiesProvider, bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default.a);
-WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'propertiesProvider'];
-
-/***/ }),
-
 /***/ "./client/index.js":
 /*!*************************!*\
   !*** ./client/index.js ***!
@@ -285,19 +343,22 @@ WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! camunda-modeler-plugin-helpers */ "./node_modules/camunda-modeler-plugin-helpers/index.js");
 /* harmony import */ var _bpmn_js_extension__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bpmn-js-extension */ "./client/bpmn-js-extension/index.js");
-/* harmony import */ var _react_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./react/WysiwygFragment */ "./client/react/WysiwygFragment.js");
+/* harmony import */ var _react_Documentation_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./react/Documentation/WysiwygFragment */ "./client/react/Documentation/WysiwygFragment.js");
+/* harmony import */ var _react_ExportButton_ExportButton__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./react/ExportButton/ExportButton */ "./client/react/ExportButton/ExportButton.js");
+
 
 
 
 Object(camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__["registerBpmnJSPlugin"])(_bpmn_js_extension__WEBPACK_IMPORTED_MODULE_1__["default"]);
-Object(camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__["registerClientExtension"])(_react_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__["default"]);
+Object(camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__["registerClientExtension"])(_react_Documentation_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__["default"]);
+Object(camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__["registerClientExtension"])(_react_ExportButton_ExportButton__WEBPACK_IMPORTED_MODULE_3__["default"]);
 
 /***/ }),
 
-/***/ "./client/react/DocumentationEditor.js":
-/*!*********************************************!*\
-  !*** ./client/react/DocumentationEditor.js ***!
-  \*********************************************/
+/***/ "./client/react/Documentation/DocumentationEditor.js":
+/*!***********************************************************!*\
+  !*** ./client/react/Documentation/DocumentationEditor.js ***!
+  \***********************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -361,10 +422,10 @@ const documentationEditor = props => {
 
 /***/ }),
 
-/***/ "./client/react/DocumentationModal.js":
-/*!********************************************!*\
-  !*** ./client/react/DocumentationModal.js ***!
-  \********************************************/
+/***/ "./client/react/Documentation/DocumentationModal.js":
+/*!**********************************************************!*\
+  !*** ./client/react/Documentation/DocumentationModal.js ***!
+  \**********************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -373,7 +434,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! camunda-modeler-plugin-helpers/react */ "./node_modules/camunda-modeler-plugin-helpers/react.js");
 /* harmony import */ var camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var camunda_modeler_plugin_helpers_components__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! camunda-modeler-plugin-helpers/components */ "./node_modules/camunda-modeler-plugin-helpers/components.js");
-/* harmony import */ var _DocumentationEditor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./DocumentationEditor */ "./client/react/DocumentationEditor.js");
+/* harmony import */ var _DocumentationEditor__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./DocumentationEditor */ "./client/react/Documentation/DocumentationEditor.js");
 
 
  // polyfill upcoming structural components
@@ -413,10 +474,10 @@ const documentationModal = props => {
 
 /***/ }),
 
-/***/ "./client/react/WysiwygFragment.js":
-/*!*****************************************!*\
-  !*** ./client/react/WysiwygFragment.js ***!
-  \*****************************************/
+/***/ "./client/react/Documentation/WysiwygFragment.js":
+/*!*******************************************************!*\
+  !*** ./client/react/Documentation/WysiwygFragment.js ***!
+  \*******************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -425,7 +486,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return WysiwygFragment; });
 /* harmony import */ var camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! camunda-modeler-plugin-helpers/react */ "./node_modules/camunda-modeler-plugin-helpers/react.js");
 /* harmony import */ var camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _DocumentationModal__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DocumentationModal */ "./client/react/DocumentationModal.js");
+/* harmony import */ var _DocumentationModal__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DocumentationModal */ "./client/react/Documentation/DocumentationModal.js");
 /* harmony import */ var draft_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! draft-js */ "./node_modules/draft-js/lib/Draft.js");
 /* harmony import */ var draft_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(draft_js__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var draftjs_to_html__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! draftjs-to-html */ "./node_modules/draftjs-to-html/lib/draftjs-to-html.js");
@@ -556,6 +617,150 @@ class WysiwygFragment extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPO
   }
 
 }
+
+/***/ }),
+
+/***/ "./client/react/ExportButton/ExportButton.js":
+/*!***************************************************!*\
+  !*** ./client/react/ExportButton/ExportButton.js ***!
+  \***************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! camunda-modeler-plugin-helpers/react */ "./node_modules/camunda-modeler-plugin-helpers/react.js");
+/* harmony import */ var camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var camunda_modeler_plugin_helpers_components__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! camunda-modeler-plugin-helpers/components */ "./node_modules/camunda-modeler-plugin-helpers/components.js");
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! classnames */ "./node_modules/classnames/index.js");
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _bpmn_js_extension_exporter_exporter__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../bpmn-js-extension/exporter/exporter */ "./client/bpmn-js-extension/exporter/exporter.js");
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
+
+
+
+
+const defaultState = {
+  modeler: null,
+  tabModeler: [],
+  tabId: null
+};
+
+class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__["Component"] {
+  constructor(props) {
+    super(props);
+
+    _defineProperty(this, "hasDocumentation", element => {
+      let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["getBusinessObject"])(element);
+      const documentation = bo.get('documentation');
+      return documentation.length > 0;
+    });
+
+    _defineProperty(this, "exportDiagram", modeler => {
+      const elementRegistry = modeler.get('elementRegistry');
+      const elements = elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element));
+      const startElement = elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(element, 'bpmn:StartEvent') && element.type !== 'label' && !Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(element.parent, 'bpmn:SubProcess')); // console.log(this.stringify({ elements: elements}, 2, null, 2));
+
+      console.log(Object(_bpmn_js_extension_exporter_exporter__WEBPACK_IMPORTED_MODULE_5__["default"])(elements).export());
+    });
+
+    _defineProperty(this, "stringify", function (val, depth, replacer, space) {
+      depth = isNaN(+depth) ? 1 : depth;
+
+      function _build(key, val, depth, o, a) {
+        // (JSON.stringify() has it's own rules, which we respect here by using it for property iteration)
+        return !val || typeof val != 'object' ? val : (a = Array.isArray(val), JSON.stringify(val, function (k, v) {
+          if (a || depth > 0) {
+            if (replacer) v = replacer(k, v);
+            if (!k) return a = Array.isArray(v), val = v;
+            !o && (o = a ? [] : {});
+            o[k] = _build(k, v, a ? depth : depth - 1);
+          }
+        }), o || (a ? [] : {}));
+      }
+
+      return JSON.stringify(_build('', val, depth), null, space);
+    });
+
+    this.state = defaultState;
+  }
+
+  componentDidMount() {
+    /**
+     * The component props include everything the Application offers plugins,
+     * which includes:
+     * - config: save and retrieve information to the local configuration
+     * - subscribe: hook into application events, like <tab.saved>, <app.activeTabChanged> ...
+     * - triggerAction: execute editor actions, like <save>, <open-diagram> ...
+     * - log: log information into the Log panel
+     * - displayNotification: show notifications inside the application
+     */
+    const {
+      subscribe
+    } = this.props;
+    subscribe('bpmn.modeler.created', ({
+      modeler,
+      tab
+    }) => {
+      const {
+        tabModeler
+      } = this.state;
+      this.setState({
+        modeler: modeler,
+        tabModeler: [...tabModeler, {
+          tabId: tab.id,
+          modeler: modeler
+        }],
+        tabId: tab.id
+      });
+    });
+    subscribe('app.activeTabChanged', tab => {
+      const {
+        tabModeler
+      } = this.state;
+      let activeTabId = tab.activeTab.id;
+      const activeTab = Object(lodash__WEBPACK_IMPORTED_MODULE_4__["find"])(tabModeler, {
+        tabId: activeTabId
+      });
+
+      if (activeTab) {
+        this.setState({
+          modeler: activeTab.modeler,
+          tabId: activeTabId
+        });
+      }
+    });
+  }
+
+  render() {
+    const {
+      tabModeler,
+      tabId
+    } = this.state;
+    const activeTab = Object(lodash__WEBPACK_IMPORTED_MODULE_4__["find"])(tabModeler, {
+      tabId: tabId
+    });
+    return /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__["Fragment"], null, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(camunda_modeler_plugin_helpers_components__WEBPACK_IMPORTED_MODULE_1__["Fill"], {
+      slot: "toolbar",
+      group: "9_n_exportDocumentation"
+    }, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+      type: "button",
+      className: classnames__WEBPACK_IMPORTED_MODULE_3___default()('toolbarBtn', 'exportBtn'),
+      onClick: () => {
+        this.exportDiagram(activeTab.modeler);
+      }
+    })));
+  }
+
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (ExportButton);
 
 /***/ }),
 
@@ -3341,6 +3546,68 @@ if (!window.react) {
  * @type {import('react')}
  */
 module.exports = window.react;
+
+/***/ }),
+
+/***/ "./node_modules/classnames/index.js":
+/*!******************************************!*\
+  !*** ./node_modules/classnames/index.js ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+  Copyright (c) 2017 Jed Watson.
+  Licensed under the MIT License (MIT), see
+  http://jedwatson.github.io/classnames
+*/
+/* global define */
+
+(function () {
+	'use strict';
+
+	var hasOwn = {}.hasOwnProperty;
+
+	function classNames () {
+		var classes = [];
+
+		for (var i = 0; i < arguments.length; i++) {
+			var arg = arguments[i];
+			if (!arg) continue;
+
+			var argType = typeof arg;
+
+			if (argType === 'string' || argType === 'number') {
+				classes.push(arg);
+			} else if (Array.isArray(arg) && arg.length) {
+				var inner = classNames.apply(null, arg);
+				if (inner) {
+					classes.push(inner);
+				}
+			} else if (argType === 'object') {
+				for (var key in arg) {
+					if (hasOwn.call(arg, key) && arg[key]) {
+						classes.push(key);
+					}
+				}
+			}
+		}
+
+		return classes.join(' ');
+	}
+
+	if ( true && module.exports) {
+		classNames.default = classNames;
+		module.exports = classNames;
+	} else if (true) {
+		// register as 'classnames', consistent with npm package name
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function () {
+			return classNames;
+		}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else {}
+}());
+
 
 /***/ }),
 
