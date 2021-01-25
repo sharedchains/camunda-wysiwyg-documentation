@@ -79,7 +79,8 @@ class ExportToolbar extends Component {
       let eventBus = activeTab.modeler.get('eventBus');
       let exportMode = !prevState.exportMode;
       eventBus.fire(TOGGLE_MODE_EVENT, {
-        exportMode: exportMode
+        exportMode: exportMode,
+        fromModeler: true
       });
       return {
         exportMode: exportMode,
@@ -99,7 +100,7 @@ class ExportToolbar extends Component {
       <Fragment>
         <Fill slot="toolbar" group="9_n_exportDocumentation">
           <button type="button" className={classNames('toolbarBtn', this.state.exportMode ? 'active' : null)}
-            onClick={() => {this.toggleExportMode(tabId);}}/>
+            onClick={() => {this.toggleExportMode(tabId);}}><span className="icon-button bpmn-icon-screw-wrench"/> </button>
           <button type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
             this.exportDiagram(activeTab.modeler);
           }}/>

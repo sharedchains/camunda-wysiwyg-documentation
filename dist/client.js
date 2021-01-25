@@ -1,6 +1,122 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./client/bpmn-js-extension/disableModeling/DisableModeling.js":
+/*!*********************************************************************!*\
+  !*** ./client/bpmn-js-extension/disableModeling/DisableModeling.js ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => /* binding */ DisableModeling
+/* harmony export */ });
+/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+
+
+
+
+var HIGH_PRIORITY = 10001;
+function DisableModeling(eventBus, canvas, contextPad, dragging, directEditing, editorActions, modeling, palette) {
+  const self = this;
+  this._eventBus = eventBus;
+  this._canvas = canvas;
+  this.modelingDisabled = false;
+  eventBus.on('import.done', function () {
+    self.canvasParent = self._canvas.getContainer().parentNode;
+    self.palette = (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.query)('.djs-palette', self._canvas.getContainer());
+  });
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__.TOGGLE_MODE_EVENT, HIGH_PRIORITY, function (context) {
+    self.modelingDisabled = context.exportMode;
+
+    if (self.modelingDisabled) {
+      directEditing.cancel();
+      contextPad.close();
+      dragging.cancel();
+      (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.canvasParent).add('exportMode');
+      (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.palette).add('hidden');
+    } else {
+      (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.canvasParent).remove('exportMode');
+      (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.palette).remove('hidden');
+    }
+
+    palette._update();
+  });
+
+  function intercept(obj, fnName, cb) {
+    var fn = obj[fnName];
+
+    obj[fnName] = function () {
+      return cb.call(this, fn, arguments);
+    };
+  }
+
+  function ignoreIfModelingDisabled(obj, fnName) {
+    intercept(obj, fnName, function (fn, args) {
+      if (self.modelingDisabled) {
+        return;
+      }
+
+      return fn.apply(this, args);
+    });
+  }
+
+  function throwIfModelingDisabled(obj, fnName) {
+    intercept(obj, fnName, function (fn, args) {
+      if (self.modelingDisabled) {
+        throw new Error('model is read-only');
+      }
+
+      return fn.apply(this, args);
+    });
+  }
+
+  ignoreIfModelingDisabled(contextPad, 'open');
+  ignoreIfModelingDisabled(dragging, 'init');
+  ignoreIfModelingDisabled(directEditing, 'activate');
+  ignoreIfModelingDisabled(dragging, 'init');
+  ignoreIfModelingDisabled(directEditing, 'activate');
+  throwIfModelingDisabled(modeling, 'moveShape');
+  throwIfModelingDisabled(modeling, 'updateAttachment');
+  throwIfModelingDisabled(modeling, 'moveElements');
+  throwIfModelingDisabled(modeling, 'moveConnection');
+  throwIfModelingDisabled(modeling, 'layoutConnection');
+  throwIfModelingDisabled(modeling, 'createConnection');
+  throwIfModelingDisabled(modeling, 'createShape');
+  throwIfModelingDisabled(modeling, 'createLabel');
+  throwIfModelingDisabled(modeling, 'appendShape');
+  throwIfModelingDisabled(modeling, 'removeElements');
+  throwIfModelingDisabled(modeling, 'distributeElements');
+  throwIfModelingDisabled(modeling, 'removeShape');
+  throwIfModelingDisabled(modeling, 'removeConnection');
+  throwIfModelingDisabled(modeling, 'replaceShape');
+  throwIfModelingDisabled(modeling, 'pasteElements');
+  throwIfModelingDisabled(modeling, 'alignElements');
+  throwIfModelingDisabled(modeling, 'resizeShape');
+  throwIfModelingDisabled(modeling, 'createSpace');
+  throwIfModelingDisabled(modeling, 'updateWaypoints');
+  throwIfModelingDisabled(modeling, 'reconnectStart');
+  throwIfModelingDisabled(modeling, 'reconnectEnd');
+  intercept(editorActions, 'trigger', function (fn, args) {
+    var action = args[0];
+
+    if (self.modelingDisabled && isAnyAction(['undo', 'redo', 'copy', 'paste', 'removeSelection', 'spaceTool', 'lassoTool', 'globalConnectTool', 'distributeElements', 'alignElements', 'directEditing'], action)) {
+      return;
+    }
+
+    return fn.apply(this, args);
+  });
+}
+DisableModeling.$inject = ['eventBus', 'canvas', 'contextPad', 'dragging', 'directEditing', 'editorActions', 'modeling', 'palette']; // helpers //////////
+
+function isAnyAction(actions, action) {
+  return actions.indexOf(action) > -1;
+}
+
+/***/ }),
+
 /***/ "./client/bpmn-js-extension/index.js":
 /*!*******************************************!*\
   !*** ./client/bpmn-js-extension/index.js ***!
@@ -13,6 +129,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__
 /* harmony export */ });
 /* harmony import */ var _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./propertiesProvider/WysiwygPropertiesProvider */ "./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js");
+/* harmony import */ var _disableModeling_DisableModeling__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./disableModeling/DisableModeling */ "./client/bpmn-js-extension/disableModeling/DisableModeling.js");
+
 
 /**
  * A bpmn-js module, defining all extension services and their dependencies.
@@ -20,8 +138,9 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  __init__: ['WysiwygPropertiesProvider'],
-  WysiwygPropertiesProvider: ['type', _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__.default]
+  __init__: ['WysiwygPropertiesProvider', 'DisableModeling'],
+  WysiwygPropertiesProvider: ['type', _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__.default],
+  DisableModeling: ['type', _disableModeling_DisableModeling__WEBPACK_IMPORTED_MODULE_1__.default]
 });
 
 /***/ }),
@@ -53,7 +172,7 @@ function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translat
   let camundaGetTabs = propertiesProvider.getTabs;
 
   propertiesProvider.getTabs = function (element) {
-    var array = camundaGetTabs(element);
+    const array = camundaGetTabs(element);
     let generalTab = (0,lodash__WEBPACK_IMPORTED_MODULE_2__.find)(array, {
       id: 'general'
     });
@@ -204,14 +323,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! camunda-modeler-plugin-helpers */ "./node_modules/camunda-modeler-plugin-helpers/index.js");
 /* harmony import */ var _bpmn_js_extension__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bpmn-js-extension */ "./client/bpmn-js-extension/index.js");
 /* harmony import */ var _react_Documentation_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./react/Documentation/WysiwygFragment */ "./client/react/Documentation/WysiwygFragment.js");
-/* harmony import */ var _react_ExportButton_ExportButton__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./react/ExportButton/ExportButton */ "./client/react/ExportButton/ExportButton.js");
+/* harmony import */ var _react_ExportToolbar_ExportToolbar__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./react/ExportToolbar/ExportToolbar */ "./client/react/ExportToolbar/ExportToolbar.js");
 
 
 
 
 (0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerBpmnJSPlugin)(_bpmn_js_extension__WEBPACK_IMPORTED_MODULE_1__.default);
 (0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerClientExtension)(_react_Documentation_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__.default);
-(0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerClientExtension)(_react_ExportButton_ExportButton__WEBPACK_IMPORTED_MODULE_3__.default);
+(0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerClientExtension)(_react_ExportToolbar_ExportToolbar__WEBPACK_IMPORTED_MODULE_3__.default);
 
 /***/ }),
 
@@ -485,10 +604,10 @@ class WysiwygFragment extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPO
 
 /***/ }),
 
-/***/ "./client/react/ExportButton/ExportButton.js":
-/*!***************************************************!*\
-  !*** ./client/react/ExportButton/ExportButton.js ***!
-  \***************************************************/
+/***/ "./client/react/ExportToolbar/ExportToolbar.js":
+/*!*****************************************************!*\
+  !*** ./client/react/ExportToolbar/ExportToolbar.js ***!
+  \*****************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -503,9 +622,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _utils_exporter_exporter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/exporter/exporter */ "./client/utils/exporter/exporter.js");
-/* harmony import */ var _exportUtils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./exportUtils */ "./client/react/ExportButton/exportUtils.js");
+/* harmony import */ var _utils_Exporter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/Exporter */ "./client/utils/Exporter.js");
+/* harmony import */ var _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../utils/exportUtils */ "./client/utils/exportUtils.js");
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 
 
 
@@ -516,20 +637,46 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 const defaultState = {
   modeler: null,
   tabModeler: [],
-  tabId: null
+  tabId: null,
+  exportMode: false
 };
 
-class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__.Component {
+class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__.Component {
   constructor(props) {
     super(props);
 
     _defineProperty(this, "exportDiagram", modeler => {
       const elementRegistry = modeler.get('elementRegistry'); // Ottengo tutti gli elementi che presentano documentazione
 
-      let utils = new _exportUtils__WEBPACK_IMPORTED_MODULE_5__.default(elementRegistry);
+      let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.default(elementRegistry);
       const elements = utils.getAllElementsWithDocumentation(); // console.log(this.stringify({ elements: elements}, 2, null, 2));
 
-      console.log((0,_utils_exporter_exporter__WEBPACK_IMPORTED_MODULE_4__.default)(elements).export());
+      console.log((0,_utils_Exporter__WEBPACK_IMPORTED_MODULE_4__.default)(elements).export());
+    });
+
+    _defineProperty(this, "toggleExportMode", tabId => {
+      const {
+        tabModeler
+      } = this.state;
+      const activeTab = (0,lodash__WEBPACK_IMPORTED_MODULE_3__.find)(tabModeler, {
+        tabId: tabId
+      });
+      this.setState(prevState => {
+        let eventBus = activeTab.modeler.get('eventBus');
+        let exportMode = !prevState.exportMode;
+        eventBus.fire(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_6__.TOGGLE_MODE_EVENT, {
+          exportMode: exportMode,
+          fromModeler: true
+        });
+        return {
+          exportMode: exportMode,
+          tabModeler: [...tabModeler, {
+            modeler: activeTab.modeler,
+            tabId: tabId,
+            exportMode: exportMode
+          }]
+        };
+      });
     });
 
     this.state = defaultState;
@@ -560,7 +707,8 @@ class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTE
         modeler: modeler,
         tabModeler: [...tabModeler, {
           tabId: tab.id,
-          modeler: modeler
+          modeler: modeler,
+          exportMode: false
         }],
         tabId: tab.id
       });
@@ -577,7 +725,8 @@ class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTE
       if (activeTab) {
         this.setState({
           modeler: activeTab.modeler,
-          tabId: activeTabId
+          tabId: activeTabId,
+          exportMode: activeTab.exportMode
         });
       }
     });
@@ -596,7 +745,15 @@ class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTE
       group: "9_n_exportDocumentation"
     }, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
       type: "button",
-      className: classnames__WEBPACK_IMPORTED_MODULE_2___default()('toolbarBtn', 'exportBtn'),
+      className: classnames__WEBPACK_IMPORTED_MODULE_2___default()('toolbarBtn', this.state.exportMode ? 'active' : null),
+      onClick: () => {
+        this.toggleExportMode(tabId);
+      }
+    }, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+      className: "icon-button bpmn-icon-screw-wrench"
+    }), " "), /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+      type: "button",
+      className: classnames__WEBPACK_IMPORTED_MODULE_2___default()('exportBtn', 'toolbarBtn'),
       onClick: () => {
         this.exportDiagram(activeTab.modeler);
       }
@@ -605,14 +762,125 @@ class ExportButton extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTE
 
 }
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ExportButton);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ExportToolbar);
 
 /***/ }),
 
-/***/ "./client/react/ExportButton/exportUtils.js":
-/*!**************************************************!*\
-  !*** ./client/react/ExportButton/exportUtils.js ***!
-  \**************************************************/
+/***/ "./client/utils/EventHelper.js":
+/*!*************************************!*\
+  !*** ./client/utils/EventHelper.js ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "TOGGLE_MODE_EVENT": () => /* binding */ TOGGLE_MODE_EVENT,
+/* harmony export */   "UPDATE_ELEMENT_EVENT": () => /* binding */ UPDATE_ELEMENT_EVENT,
+/* harmony export */   "UPDATE_ELEMENTS_EVENT": () => /* binding */ UPDATE_ELEMENTS_EVENT,
+/* harmony export */   "SET_DOCUMENTATION_ORDER_EVENT": () => /* binding */ SET_DOCUMENTATION_ORDER_EVENT,
+/* harmony export */   "UNSET_DOCUMENTATION_ORDER_EVENT": () => /* binding */ UNSET_DOCUMENTATION_ORDER_EVENT
+/* harmony export */ });
+let prefix = 'exportDocumentation';
+const TOGGLE_MODE_EVENT = prefix + '.toggleMode';
+const UPDATE_ELEMENT_EVENT = prefix + '.updateElement';
+const UPDATE_ELEMENTS_EVENT = prefix + '.updateElements';
+const SET_DOCUMENTATION_ORDER_EVENT = prefix + '.setDocumentationOrder';
+const UNSET_DOCUMENTATION_ORDER_EVENT = prefix + '.unsetDocumentationOrder';
+
+/***/ }),
+
+/***/ "./client/utils/Exporter.js":
+/*!**********************************!*\
+  !*** ./client/utils/Exporter.js ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__
+/* harmony export */ });
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var _raw_loader_bpmn_font_dist_css_bpmn_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !!raw-loader!bpmn-font/dist/css/bpmn.css */ "./node_modules/raw-loader/dist/cjs.js!./node_modules/bpmn-font/dist/css/bpmn.css");
+
+
+/*
+* Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
+* Each element of the array is an object node from bpmn-js
+* */
+
+const Exporter = hierarchy => {
+  let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
+  let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
+  hierarchy.forEach(element => {
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
+    const elementId = element.id;
+    const elementName = bo.get('name');
+    const documentation = bo.get('documentation');
+    const camel = bo.$type.substring(5);
+    let dashed = 'bpmn-icon' + camel.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+    let icon = `<span class="${dashed}"></span>`;
+
+    if (documentation.length > 0) {
+      const anchorLink = `<a href="#${elementId}">${elementName || elementId}</a><br/>`;
+      docIndexes += anchorLink;
+      const docText = bo.get('documentation')[0].get('text');
+      const anchoredText = `<div class="documentationElement" id="container-${elementId}"><h2><a name="${elementId}"></a>${icon}&nbsp;${elementName || elementId}</h2>${docText}</div>`;
+      docHierarchy += anchoredText;
+    }
+  });
+
+  let getDocumentation = function () {
+    return docIndexes + '</div>' + docHierarchy + '</div>';
+  };
+
+  let exportDocumentation = function () {
+    return `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Documentation</title>
+    
+    <style>${_raw_loader_bpmn_font_dist_css_bpmn_css__WEBPACK_IMPORTED_MODULE_0__.default}</style>
+    <style>
+        h1 {
+            text-align: center;
+        }
+        
+        .documentationIndexes {
+            margin: 10px 10% auto;
+        }
+        
+        .documentationElement {
+            width: 80%;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 3px #ccc;
+            padding: 10px;
+            margin: 10px auto;
+            box-sizing: border-box;
+        }
+        
+    </style>
+</head>
+<body>
+    ${getDocumentation()}
+</body>`;
+  };
+
+  return {
+    'export': exportDocumentation
+  };
+};
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Exporter);
+
+/***/ }),
+
+/***/ "./client/utils/exportUtils.js":
+/*!*************************************!*\
+  !*** ./client/utils/exportUtils.js ***!
+  \*************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -712,93 +980,6 @@ class exportUtils {
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (exportUtils);
-
-/***/ }),
-
-/***/ "./client/utils/exporter/exporter.js":
-/*!*******************************************!*\
-  !*** ./client/utils/exporter/exporter.js ***!
-  \*******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__
-/* harmony export */ });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
-/* harmony import */ var _raw_loader_bpmn_font_dist_css_bpmn_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !!raw-loader!bpmn-font/dist/css/bpmn.css */ "./node_modules/raw-loader/dist/cjs.js!./node_modules/bpmn-font/dist/css/bpmn.css");
-
-
-/*
-* Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
-* Each element of the array is an object node from bpmn-js
-* */
-
-const exporter = hierarchy => {
-  let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
-  let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
-  hierarchy.forEach(element => {
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
-    const elementId = element.id;
-    const elementName = bo.get('name');
-    const documentation = bo.get('documentation');
-    const camel = bo.$type.substring(5);
-    let dashed = 'bpmn-icon' + camel.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
-    let icon = `<span class="${dashed}"></span>`;
-
-    if (documentation.length > 0) {
-      const anchorLink = `<a href="#${elementId}">${elementName || elementId}</a><br/>`;
-      docIndexes += anchorLink;
-      const docText = bo.get('documentation')[0].get('text');
-      const anchoredText = `<div class="documentationElement" id="container-${elementId}"><h2><a name="${elementId}"></a>${icon}&nbsp;${elementName || elementId}</h2>${docText}</div>`;
-      docHierarchy += anchoredText;
-    }
-  });
-
-  let getDocumentation = function () {
-    return docIndexes + '</div>' + docHierarchy + '</div>';
-  };
-
-  let exportDocumentation = function () {
-    return `<!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Documentation</title>
-    
-    <style>${_raw_loader_bpmn_font_dist_css_bpmn_css__WEBPACK_IMPORTED_MODULE_0__.default}</style>
-    <style>
-        h1 {
-            text-align: center;
-        }
-        
-        .documentationIndexes {
-            margin: 10px 10% auto;
-        }
-        
-        .documentationElement {
-            width: 80%;
-            border: 1px solid #eee;
-            box-shadow: 0 2px 3px #ccc;
-            padding: 10px;
-            margin: 10px auto;
-            box-sizing: border-box;
-        }
-        
-    </style>
-</head>
-<body>
-    ${getDocumentation()}
-</body>`;
-  };
-
-  return {
-    'export': exportDocumentation
-  };
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (exporter);
 
 /***/ }),
 

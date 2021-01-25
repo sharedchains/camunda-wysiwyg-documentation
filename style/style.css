@@ -40,6 +40,22 @@ input[id$="-documentation"] {
     background-position: center !important;
 }
 
+.icon-button {
+    font-size: 120% !important;
+}
+
+/* Export Mode*/
+.bjs-container.exportMode .djs-palette.hidden {
+    display: none;
+}
+.bjs-container.exportMode .djs-outline,
+.bjs-container.exportMode .djs-bendpoint,
+.bjs-container.exportMode .djs-segment-dragger,
+.bjs-container.exportMode .djs-resizer {
+    display: none !important;
+}
+
+
 /* Button style */
 .toolbarBtn {
     box-sizing: border-box;
