@@ -1,6 +1,17 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./client/bpmn-js-extension/propertiesProvider/moddle/documentation.json":
+/*!*******************************************************************************!*\
+  !*** ./client/bpmn-js-extension/propertiesProvider/moddle/documentation.json ***!
+  \*******************************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = JSON.parse("{\"name\":\"Documentation properties\",\"prefix\":\"documentation\",\"uri\":\"http://documentation.sh4.red\",\"xml\":{\"tagAlias\":\"lowerCase\"},\"associations\":[],\"types\":[{\"name\":\"DocumentationOrder\",\"extends\":[\"bpmn:FlowNode\"],\"properties\":[{\"name\":\"order\",\"isAttr\":true,\"type\":\"String\"}]}]}");
+
+/***/ }),
+
 /***/ "./client/bpmn-js-extension/disableModeling/DisableModeling.js":
 /*!*********************************************************************!*\
   !*** ./client/bpmn-js-extension/disableModeling/DisableModeling.js ***!
@@ -14,8 +25,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
 /* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
-
-
 
 
 var HIGH_PRIORITY = 10001;
@@ -34,10 +43,12 @@ function DisableModeling(eventBus, canvas, contextPad, dragging, directEditing, 
     if (self.modelingDisabled) {
       directEditing.cancel();
       contextPad.close();
-      dragging.cancel();
+      dragging.cancel(); // hiding palette
+
       (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.canvasParent).add('exportMode');
       (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.palette).add('hidden');
     } else {
+      // showing palette again
       (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.canvasParent).remove('exportMode');
       (0,min_dom__WEBPACK_IMPORTED_MODULE_1__.classes)(self.palette).remove('hidden');
     }
@@ -117,6 +128,64 @@ function isAnyAction(actions, action) {
 
 /***/ }),
 
+/***/ "./client/bpmn-js-extension/exportMode/ExportMode.js":
+/*!***********************************************************!*\
+  !*** ./client/bpmn-js-extension/exportMode/ExportMode.js ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => /* binding */ ExportMode
+/* harmony export */ });
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+
+var HIGH_PRIORITY = 10001;
+function ExportMode(eventBus, contextPad) {
+  const self = this;
+  this._eventBus = eventBus;
+  this.exportMode = false;
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__.TOGGLE_MODE_EVENT, HIGH_PRIORITY, function (context) {
+    self.exportMode = context.exportMode;
+
+    if (self.exportMode) {
+      self._eventBus.on('selection.changed', 500, self.selectElement);
+
+      self._eventBus.on('element.contextmenu', self.rightSelectElement);
+    } else {
+      self._eventBus.off('selection.changed', self.selectElement);
+
+      self._eventBus.off('element.contextmenu', self.rightSelectElement);
+    }
+  });
+
+  this.selectElement = event => {
+    let selection = event.newSelection;
+
+    if (selection.length === 1) {
+      self._eventBus.fire(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__.SET_DOCUMENTATION_ORDER_EVENT, {
+        element: selection
+      });
+    }
+  };
+
+  this.rightSelectElement = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const {
+      element
+    } = event;
+
+    self._eventBus.fire(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__.UNSET_DOCUMENTATION_ORDER_EVENT, {
+      element: element
+    });
+  };
+}
+ExportMode.$inject = ['eventBus', 'contextPad', 'overlays'];
+
+/***/ }),
+
 /***/ "./client/bpmn-js-extension/index.js":
 /*!*******************************************!*\
   !*** ./client/bpmn-js-extension/index.js ***!
@@ -130,6 +199,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./propertiesProvider/WysiwygPropertiesProvider */ "./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js");
 /* harmony import */ var _disableModeling_DisableModeling__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./disableModeling/DisableModeling */ "./client/bpmn-js-extension/disableModeling/DisableModeling.js");
+/* harmony import */ var _exportMode_ExportMode__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./exportMode/ExportMode */ "./client/bpmn-js-extension/exportMode/ExportMode.js");
+
 
 
 /**
@@ -138,9 +209,10 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  __init__: ['WysiwygPropertiesProvider', 'DisableModeling'],
+  __init__: ['WysiwygPropertiesProvider', 'DisableModeling', 'ExportMode'],
   WysiwygPropertiesProvider: ['type', _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__.default],
-  DisableModeling: ['type', _disableModeling_DisableModeling__WEBPACK_IMPORTED_MODULE_1__.default]
+  DisableModeling: ['type', _disableModeling_DisableModeling__WEBPACK_IMPORTED_MODULE_1__.default],
+  ExportMode: ['type', _exportMode_ExportMode__WEBPACK_IMPORTED_MODULE_2__.default]
 });
 
 /***/ }),
@@ -160,37 +232,62 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(inherits__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/PropertiesActivator */ "./node_modules/bpmn-js-properties-panel/lib/PropertiesActivator.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./wysiwygDecorator */ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/factory/EntryFactory */ "./node_modules/bpmn-js-properties-panel/lib/factory/EntryFactory.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _wysiwygDecorator__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./wysiwygDecorator */ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js");
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
 
 
 
 
-function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, propertiesProvider) {
+
+
+const HIGH_PRIORITY = 10001;
+function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider) {
   bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default().call(this, eventBus);
+  const self = this;
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_5__.TOGGLE_MODE_EVENT, HIGH_PRIORITY, function (context) {
+    self.exportMode = context.exportMode;
+    eventBus.fire('selection.changed', {
+      oldSelection: [],
+      newSelection: selection.get()
+    });
+  });
   let camundaGetTabs = propertiesProvider.getTabs;
 
   propertiesProvider.getTabs = function (element) {
     const array = camundaGetTabs(element);
-    let generalTab = (0,lodash__WEBPACK_IMPORTED_MODULE_2__.find)(array, {
+    let generalTab = (0,lodash__WEBPACK_IMPORTED_MODULE_3__.find)(array, {
       id: 'general'
     });
-    let documentationTab = (0,lodash__WEBPACK_IMPORTED_MODULE_2__.find)(generalTab.groups, {
+    let documentationTab = (0,lodash__WEBPACK_IMPORTED_MODULE_3__.find)(generalTab.groups, {
       id: 'documentation'
     });
 
     if (documentationTab) {
       documentationTab.entries = documentationTab.entries.map(entry => {
-        return (0,_wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__.default)(translate, eventBus, commandStack, bpmnFactory, entry);
-      });
+        return (0,_wysiwygDecorator__WEBPACK_IMPORTED_MODULE_4__.default)(translate, eventBus, commandStack, bpmnFactory, entry);
+      }); // Adding documentation order field
+
+      documentationTab.entries.push(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2___default().textField(translate, {
+        id: 'documentation-order',
+        label: 'Documentation order',
+        modelProperty: 'order'
+      }));
+    }
+
+    if (self.exportMode) {
+      generalTab.groups = [documentationTab];
+      return [generalTab];
     }
 
     return array;
   };
 }
 inherits__WEBPACK_IMPORTED_MODULE_0___default()(WysiwygPropertiesProvider, (bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default()));
-WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'propertiesProvider'];
+WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider'];
 
 /***/ }),
 
@@ -324,11 +421,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _bpmn_js_extension__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bpmn-js-extension */ "./client/bpmn-js-extension/index.js");
 /* harmony import */ var _react_Documentation_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./react/Documentation/WysiwygFragment */ "./client/react/Documentation/WysiwygFragment.js");
 /* harmony import */ var _react_ExportToolbar_ExportToolbar__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./react/ExportToolbar/ExportToolbar */ "./client/react/ExportToolbar/ExportToolbar.js");
+/* harmony import */ var _bpmn_js_extension_propertiesProvider_moddle_documentation_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./bpmn-js-extension/propertiesProvider/moddle/documentation.json */ "./client/bpmn-js-extension/propertiesProvider/moddle/documentation.json");
+
 
 
 
 
 (0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerBpmnJSPlugin)(_bpmn_js_extension__WEBPACK_IMPORTED_MODULE_1__.default);
+(0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerBpmnJSModdleExtension)(_bpmn_js_extension_propertiesProvider_moddle_documentation_json__WEBPACK_IMPORTED_MODULE_4__);
 (0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerClientExtension)(_react_Documentation_WysiwygFragment__WEBPACK_IMPORTED_MODULE_2__.default);
 (0,camunda_modeler_plugin_helpers__WEBPACK_IMPORTED_MODULE_0__.registerClientExtension)(_react_ExportToolbar_ExportToolbar__WEBPACK_IMPORTED_MODULE_3__.default);
 

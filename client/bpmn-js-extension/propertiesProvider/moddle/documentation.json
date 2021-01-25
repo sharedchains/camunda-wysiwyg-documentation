@@ -1,0 +1,24 @@
+{
+  "name": "Documentation properties",
+  "prefix": "documentation",
+  "uri": "http://documentation.sh4.red",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "DocumentationOrder",
+      "extends": [
+        "bpmn:FlowNode"
+      ],
+      "properties": [
+        {
+          "name": "order",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    }
+  ]
+}
