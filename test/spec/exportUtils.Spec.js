@@ -1,4 +1,4 @@
-import exportUtils from '../../client/react/ExportButton/exportUtils';
+import exportUtils from '../../client/utils/exportUtils';
 
 import Modeler from 'bpmn-js/lib/Modeler';
 

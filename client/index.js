@@ -4,9 +4,9 @@ import {
 
 import BpmnExtensionModule from './bpmn-js-extension';
 import WysiwygFragment from './react/Documentation/WysiwygFragment';
-import ExportButton from "./react/ExportButton/ExportButton";
+import ExportToolbar from './react/ExportToolbar/ExportToolbar';
 
 registerBpmnJSPlugin(BpmnExtensionModule);
 
 registerClientExtension(WysiwygFragment);
-registerClientExtension(ExportButton);
+registerClientExtension(ExportToolbar);

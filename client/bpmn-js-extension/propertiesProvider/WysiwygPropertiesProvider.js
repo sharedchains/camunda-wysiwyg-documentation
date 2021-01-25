@@ -11,7 +11,7 @@ export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFa
   let camundaGetTabs = propertiesProvider.getTabs;
   propertiesProvider.getTabs = function(element) {
 
-    var array = camundaGetTabs(element);
+    const array = camundaGetTabs(element);
     let generalTab = find(array, { id: 'general' });
     let documentationTab = find(generalTab.groups, { id: 'documentation' });
     if (documentationTab) {

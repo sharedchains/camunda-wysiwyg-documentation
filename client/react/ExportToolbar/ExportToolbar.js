@@ -1,19 +1,21 @@
 import React, { Fragment, Component } from 'camunda-modeler-plugin-helpers/react';
 import { Fill } from 'camunda-modeler-plugin-helpers/components';
-
 import classNames from 'classnames';
-
 import { find } from 'lodash';
-import exporter from '../../utils/exporter/exporter';
-import exportUtils from './exportUtils';
+
+import Exporter from '../../utils/Exporter';
+import exportUtils from '../../utils/exportUtils';
+
+import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
 
 const defaultState = {
   modeler: null,
   tabModeler: [],
-  tabId: null
+  tabId: null,
+  exportMode: false
 };
 
-class ExportButton extends Component {
+class ExportToolbar extends Component {
   constructor(props) {
     super(props);
 
@@ -40,7 +42,7 @@ class ExportButton extends Component {
       const { tabModeler } = this.state;
       this.setState({
         modeler: modeler,
-        tabModeler: [...tabModeler, { tabId: tab.id, modeler: modeler }],
+        tabModeler: [...tabModeler, { tabId: tab.id, modeler: modeler, exportMode: false }],
         tabId: tab.id
       });
     });
@@ -52,7 +54,7 @@ class ExportButton extends Component {
       let activeTabId = tab.activeTab.id;
       const activeTab = find(tabModeler, { tabId: activeTabId });
       if (activeTab) {
-        this.setState({ modeler: activeTab.modeler, tabId: activeTabId });
+        this.setState({ modeler: activeTab.modeler, tabId: activeTabId, exportMode: activeTab.exportMode });
       }
     });
   }
@@ -65,7 +67,25 @@ class ExportButton extends Component {
     const elements = utils.getAllElementsWithDocumentation();
 
     // console.log(this.stringify({ elements: elements}, 2, null, 2));
-    console.log(exporter(elements).export());
+    console.log(Exporter(elements).export());
+  };
+
+  toggleExportMode = (tabId) => {
+    const {
+      tabModeler
+    } = this.state;
+    const activeTab = find(tabModeler, { tabId: tabId });
+    this.setState(prevState => {
+      let eventBus = activeTab.modeler.get('eventBus');
+      let exportMode = !prevState.exportMode;
+      eventBus.fire(TOGGLE_MODE_EVENT, {
+        exportMode: exportMode
+      });
+      return {
+        exportMode: exportMode,
+        tabModeler: [...tabModeler, { modeler: activeTab.modeler, tabId: tabId, exportMode: exportMode }]
+      };
+    });
   };
 
   render() {
@@ -78,7 +98,9 @@ class ExportButton extends Component {
     return (
       <Fragment>
         <Fill slot="toolbar" group="9_n_exportDocumentation">
-          <button type="button" className={classNames('toolbarBtn', 'exportBtn')} onClick={() => {
+          <button type="button" className={classNames('toolbarBtn', this.state.exportMode ? 'active' : null)}
+            onClick={() => {this.toggleExportMode(tabId);}}/>
+          <button type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
             this.exportDiagram(activeTab.modeler);
           }}/>
         </Fill>
@@ -87,4 +109,4 @@ class ExportButton extends Component {
   }
 }
 
-export default ExportButton;
+export default ExportToolbar;

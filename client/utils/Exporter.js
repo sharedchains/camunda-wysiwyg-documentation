@@ -6,7 +6,7 @@ import css from '!!raw-loader!bpmn-font/dist/css/bpmn.css';
 * Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
 * Each element of the array is an object node from bpmn-js
 * */
-const exporter = (hierarchy) => {
+const Exporter = (hierarchy) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
 
@@ -70,4 +70,4 @@ const exporter = (hierarchy) => {
   };
 };
 
-export default exporter;
+export default Exporter;
