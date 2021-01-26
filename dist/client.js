@@ -128,6 +128,105 @@ function isAnyAction(actions, action) {
 
 /***/ }),
 
+/***/ "./client/bpmn-js-extension/documentationOverlays/DocumentationOverlays.js":
+/*!*********************************************************************************!*\
+  !*** ./client/bpmn-js-extension/documentationOverlays/DocumentationOverlays.js ***!
+  \*********************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => /* binding */ DocumentationOverlays
+/* harmony export */ });
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+
+
+
+
+
+const OFFSET_BOTTOM = 10,
+      OFFSET_RIGHT = 15;
+function DocumentationOverlays(eventBus, overlays, commandStack) {
+  const self = this;
+  this._eventBus = eventBus;
+  this._overlays = overlays;
+  this.overlayIds = {};
+  this.counter = 1;
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.SET_DOCUMENTATION_ORDER_EVENT, function (context) {
+    const element = context.element;
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
+
+    if (!bo.get('order')) {
+      let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
+        order: self.counter
+      });
+      commandStack.execute(command.cmd, command.context);
+      const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_4__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${self.counter}</div>`);
+      const position = {
+        bottom: OFFSET_BOTTOM,
+        right: OFFSET_RIGHT
+      };
+
+      const overlayId = self._overlays.add(element, 'docOrder-badge', {
+        position: position,
+        html: overlayHtml,
+        scale: {
+          min: 1
+        }
+      });
+
+      self.overlayIds[element.id] = {
+        overlayId: overlayId,
+        order: self.counter
+      };
+      self.counter++;
+    }
+  });
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.UNSET_DOCUMENTATION_ORDER_EVENT, function (context) {
+    const element = context.element;
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
+
+    if (bo.get('order')) {
+      const overlayHistory = self.overlayIds[element.id];
+
+      if (!overlayHistory) {
+        return;
+      }
+
+      const commands = [];
+      let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
+        order: undefined
+      });
+      commands.push(command);
+      const overlayId = overlayHistory.overlayId;
+      const removedCounter = overlayHistory.order; // Removing the overlay
+
+      self._overlays.remove(overlayId);
+
+      delete self.overlayIds[element.id]; // Getting all the overlays with order > removedCounter and update them
+
+      let test = (0,lodash__WEBPACK_IMPORTED_MODULE_1__.chain)(self.overlayIds).invert().invert().reduceRight(function (current, val, key) {
+        current[key] = val;
+        return current;
+      }, {}).value(); // const toUpdate = filter(self.overlayIds, (element) => element.order > removedCounter);
+
+      commands.forEach(command => {
+        commandStack.execute(command.cmd, command.context);
+      });
+    }
+  });
+}
+DocumentationOverlays.$inject = ['eventBus', 'overlays', 'commandStack'];
+
+/***/ }),
+
 /***/ "./client/bpmn-js-extension/exportMode/ExportMode.js":
 /*!***********************************************************!*\
   !*** ./client/bpmn-js-extension/exportMode/ExportMode.js ***!
@@ -165,7 +264,7 @@ function ExportMode(eventBus, contextPad) {
 
     if (selection.length === 1) {
       self._eventBus.fire(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__.SET_DOCUMENTATION_ORDER_EVENT, {
-        element: selection
+        element: selection[0]
       });
     }
   };
@@ -200,6 +299,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./propertiesProvider/WysiwygPropertiesProvider */ "./client/bpmn-js-extension/propertiesProvider/WysiwygPropertiesProvider.js");
 /* harmony import */ var _disableModeling_DisableModeling__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./disableModeling/DisableModeling */ "./client/bpmn-js-extension/disableModeling/DisableModeling.js");
 /* harmony import */ var _exportMode_ExportMode__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./exportMode/ExportMode */ "./client/bpmn-js-extension/exportMode/ExportMode.js");
+/* harmony import */ var _documentationOverlays_DocumentationOverlays__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./documentationOverlays/DocumentationOverlays */ "./client/bpmn-js-extension/documentationOverlays/DocumentationOverlays.js");
+
 
 
 
@@ -209,10 +310,11 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  __init__: ['WysiwygPropertiesProvider', 'DisableModeling', 'ExportMode'],
+  __init__: ['WysiwygPropertiesProvider', 'DisableModeling', 'ExportMode', 'DocumentationOverlays'],
   WysiwygPropertiesProvider: ['type', _propertiesProvider_WysiwygPropertiesProvider__WEBPACK_IMPORTED_MODULE_0__.default],
   DisableModeling: ['type', _disableModeling_DisableModeling__WEBPACK_IMPORTED_MODULE_1__.default],
-  ExportMode: ['type', _exportMode_ExportMode__WEBPACK_IMPORTED_MODULE_2__.default]
+  ExportMode: ['type', _exportMode_ExportMode__WEBPACK_IMPORTED_MODULE_2__.default],
+  DocumentationOverlays: ['type', _documentationOverlays_DocumentationOverlays__WEBPACK_IMPORTED_MODULE_3__.default]
 });
 
 /***/ }),

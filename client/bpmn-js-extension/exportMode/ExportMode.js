@@ -29,7 +29,7 @@ export default function ExportMode(eventBus, contextPad) {
 
     if (selection.length === 1) {
       self._eventBus.fire(SET_DOCUMENTATION_ORDER_EVENT, {
-        element: selection
+        element: selection[0]
       });
     }
   };
