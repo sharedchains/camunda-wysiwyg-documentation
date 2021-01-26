@@ -59,7 +59,7 @@ class ExportToolbar extends Component {
     });
   }
 
-  exportDiagram = (modeler) => {
+  exportDiagram = async (modeler) => {
     const elementRegistry = modeler.get('elementRegistry');
 
     // Ottengo tutti gli elementi che presentano documentazione
@@ -67,7 +67,39 @@ class ExportToolbar extends Component {
     const elements = utils.getAllElementsWithDocumentation();
 
     // console.log(this.stringify({ elements: elements}, 2, null, 2));
-    console.log(Exporter(elements).export());
+    let file = {
+      contents: Exporter(elements).export(),
+      name: 'documentation.html',
+      fileType: 'html'
+    };
+    const {
+      config
+    } = this.props;
+
+    let savePath = await config.backend.send('dialog:save-file', {
+      title: 'Export Documentation',
+      saveAs: true,
+      filters: [{ name: 'HTML', extensions: ['html'] }],
+      file: file
+    });
+
+    if (savePath) {
+      config.backend.send('file:write', savePath, file, { encoding: 'utf8', fileType: 'html' }).then((resolve) => {
+        if (resolve) {
+          config.backend.send('dialog:show', {
+            message: 'Documentation was exported correctly!',
+            title: 'Exported documentation',
+            type: 'info'
+          });
+        }
+      }).catch(error => {
+        config.backend.send('dialog:show', {
+          message: 'Unexpected failure exporting documentation!',
+          title: 'Error exporting documentation',
+          type: 'error'
+        });
+      });
+    }
   };
 
   toggleExportMode = (tabId) => {
@@ -100,7 +132,8 @@ class ExportToolbar extends Component {
       <Fragment>
         <Fill slot="toolbar" group="9_n_exportDocumentation">
           <button type="button" className={classNames('toolbarBtn', this.state.exportMode ? 'active' : null)}
-            onClick={() => {this.toggleExportMode(tabId);}}><span className="icon-button bpmn-icon-screw-wrench"/> </button>
+            onClick={() => {this.toggleExportMode(tabId);}}><span className="icon-button bpmn-icon-screw-wrench"/>
+          </button>
           <button type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
             this.exportDiagram(activeTab.modeler);
           }}/>

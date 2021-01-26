@@ -139,14 +139,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => /* binding */ DocumentationOverlays
 /* harmony export */ });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
-
+/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
 
 
 
@@ -159,16 +156,16 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
   this._overlays = overlays;
   this.overlayIds = {};
   this.counter = 1;
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.SET_DOCUMENTATION_ORDER_EVENT, function (context) {
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_1__.SET_DOCUMENTATION_ORDER_EVENT, function (context) {
     const element = context.element;
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__.getBusinessObject)(element);
 
     if (!bo.get('order')) {
       let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
         order: self.counter
       });
       commandStack.execute(command.cmd, command.context);
-      const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_4__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${self.counter}</div>`);
+      const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_3__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${self.counter}</div>`);
       const position = {
         bottom: OFFSET_BOTTOM,
         right: OFFSET_RIGHT
@@ -189,9 +186,9 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
       self.counter++;
     }
   });
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.UNSET_DOCUMENTATION_ORDER_EVENT, function (context) {
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_1__.UNSET_DOCUMENTATION_ORDER_EVENT, function (context) {
     const element = context.element;
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__.getBusinessObject)(element);
 
     if (bo.get('order')) {
       const overlayHistory = self.overlayIds[element.id];
@@ -205,17 +202,14 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
         order: undefined
       });
       commands.push(command);
-      const overlayId = overlayHistory.overlayId;
-      const removedCounter = overlayHistory.order; // Removing the overlay
+      const overlayId = overlayHistory.overlayId; // const removedCounter = overlayHistory.order;
+      // Removing the overlay
 
       self._overlays.remove(overlayId);
 
       delete self.overlayIds[element.id]; // Getting all the overlays with order > removedCounter and update them
-
-      let test = (0,lodash__WEBPACK_IMPORTED_MODULE_1__.chain)(self.overlayIds).invert().invert().reduceRight(function (current, val, key) {
-        current[key] = val;
-        return current;
-      }, {}).value(); // const toUpdate = filter(self.overlayIds, (element) => element.order > removedCounter);
+      // https://stackoverflow.com/questions/32349838/lodash-sorting-object-by-values-without-losing-the-key
+      // const toUpdate = filter(self.overlayIds, (element) => element.order > removedCounter);
 
       commands.forEach(command => {
         commandStack.execute(command.cmd, command.context);
@@ -847,13 +841,50 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
   constructor(props) {
     super(props);
 
-    _defineProperty(this, "exportDiagram", modeler => {
+    _defineProperty(this, "exportDiagram", async modeler => {
       const elementRegistry = modeler.get('elementRegistry'); // Ottengo tutti gli elementi che presentano documentazione
 
       let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.default(elementRegistry);
       const elements = utils.getAllElementsWithDocumentation(); // console.log(this.stringify({ elements: elements}, 2, null, 2));
 
-      console.log((0,_utils_Exporter__WEBPACK_IMPORTED_MODULE_4__.default)(elements).export());
+      let file = {
+        contents: (0,_utils_Exporter__WEBPACK_IMPORTED_MODULE_4__.default)(elements).export(),
+        name: 'documentation.html',
+        fileType: 'html'
+      };
+      const {
+        config
+      } = this.props;
+      let savePath = await config.backend.send('dialog:save-file', {
+        title: 'Export Documentation',
+        saveAs: true,
+        filters: [{
+          name: 'HTML',
+          extensions: ['html']
+        }],
+        file: file
+      });
+
+      if (savePath) {
+        config.backend.send('file:write', savePath, file, {
+          encoding: 'utf8',
+          fileType: 'html'
+        }).then(resolve => {
+          if (resolve) {
+            config.backend.send('dialog:show', {
+              message: 'Documentation was exported correctly!',
+              title: 'Exported documentation',
+              type: 'info'
+            });
+          }
+        }).catch(error => {
+          config.backend.send('dialog:show', {
+            message: 'Unexpected failure exporting documentation!',
+            title: 'Error exporting documentation',
+            type: 'error'
+          });
+        });
+      }
     });
 
     _defineProperty(this, "toggleExportMode", tabId => {
@@ -953,7 +984,7 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
       }
     }, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
       className: "icon-button bpmn-icon-screw-wrench"
-    }), " "), /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    })), /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
       type: "button",
       className: classnames__WEBPACK_IMPORTED_MODULE_2___default()('exportBtn', 'toolbarBtn'),
       onClick: () => {
@@ -1003,9 +1034,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__
 /* harmony export */ });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
-/* harmony import */ var _raw_loader_bpmn_font_dist_css_bpmn_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !!raw-loader!bpmn-font/dist/css/bpmn.css */ "./node_modules/raw-loader/dist/cjs.js!./node_modules/bpmn-font/dist/css/bpmn.css");
-
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
 
 /*
 * Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
@@ -1016,12 +1045,17 @@ const Exporter = hierarchy => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
   hierarchy.forEach(element => {
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getBusinessObject)(element);
     const elementId = element.id;
     const elementName = bo.get('name');
     const documentation = bo.get('documentation');
     const camel = bo.$type.substring(5);
     let dashed = 'bpmn-icon' + camel.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+
+    if (dashed.endsWith('start-event') || dashed.endsWith('end-event')) {
+      dashed += '-none';
+    }
+
     let icon = `<span class="${dashed}"></span>`;
 
     if (documentation.length > 0) {
@@ -1044,7 +1078,7 @@ const Exporter = hierarchy => {
     <meta charset="utf-8">
     <title>Documentation</title>
     
-    <style>${_raw_loader_bpmn_font_dist_css_bpmn_css__WEBPACK_IMPORTED_MODULE_0__.default}</style>
+    <link rel="stylesheet" type="text/css" href="https://rawcdn.githack.com/bpmn-io/bpmn-font/master/dist/css/bpmn.css" />
     <style>
         h1 {
             text-align: center;
@@ -53059,21 +53093,6 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-
-/***/ }),
-
-/***/ "./node_modules/raw-loader/dist/cjs.js!./node_modules/bpmn-font/dist/css/bpmn.css":
-/*!****************************************************************************************!*\
-  !*** ./node_modules/raw-loader/dist/cjs.js!./node_modules/bpmn-font/dist/css/bpmn.css ***!
-  \****************************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__
-/* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("@font-face {\n  font-family: 'bpmn';\n  src: url('../font/bpmn.eot?26374340');\n  src: url('../font/bpmn.eot?26374340#iefix') format('embedded-opentype'),\n       url('../font/bpmn.woff2?26374340') format('woff2'),\n       url('../font/bpmn.woff?26374340') format('woff'),\n       url('../font/bpmn.ttf?26374340') format('truetype'),\n       url('../font/bpmn.svg?26374340#bpmn') format('svg');\n  font-weight: normal;\n  font-style: normal;\n}\n/* Chrome hack: SVG is rendered more smooth in Windozze. 100% magic, uncomment if you need it. */\n/* Note, that will break hinting! In other OS-es font will be not as sharp as it could be */\n/*\n@media screen and (-webkit-min-device-pixel-ratio:0) {\n  @font-face {\n    font-family: 'bpmn';\n    src: url('../font/bpmn.svg?26374340#bpmn') format('svg');\n  }\n}\n*/\n\n [class^=\"bpmn-icon-\"]:before, [class*=\" bpmn-icon-\"]:before {\n  font-family: \"bpmn\";\n  font-style: normal;\n  font-weight: normal;\n  speak: never;\n\n  display: inline-block;\n  text-decoration: inherit;\n  width: 1em;\n  /* margin-right: .2em; */\n  text-align: center;\n  /* opacity: .8; */\n\n  /* For safety - reset parent styles, that can break glyph codes*/\n  font-variant: normal;\n  text-transform: none;\n\n  /* fix buttons height, for twitter bootstrap */\n  line-height: 1em;\n\n  /* Animation center compensation - margins should be symmetric */\n  /* remove if not needed */\n  /* margin-left: .2em; */\n\n  /* you can be more comfortable with increased icons size */\n  /* font-size: 120%; */\n\n  /* Font smoothing. That was taken from TWBS */\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n\n  /* Uncomment for 3D effect */\n  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */\n}\n\n.bpmn-icon-screw-wrench:before { content: '\\e800'; } /* '' */\n.bpmn-icon-trash:before { content: '\\e801'; } /* '' */\n.bpmn-icon-conditional-flow:before { content: '\\e802'; } /* '' */\n.bpmn-icon-default-flow:before { content: '\\e803'; } /* '' */\n.bpmn-icon-gateway-parallel:before { content: '\\e804'; } /* '' */\n.bpmn-icon-intermediate-event-catch-cancel:before { content: '\\e805'; } /* '' */\n.bpmn-icon-intermediate-event-catch-non-interrupting-message:before { content: '\\e806'; } /* '' */\n.bpmn-icon-start-event-compensation:before { content: '\\e807'; } /* '' */\n.bpmn-icon-start-event-non-interrupting-parallel-multiple:before { content: '\\e808'; } /* '' */\n.bpmn-icon-loop-marker:before { content: '\\e809'; } /* '' */\n.bpmn-icon-parallel-mi-marker:before { content: '\\e80a'; } /* '' */\n.bpmn-icon-start-event-non-interrupting-signal:before { content: '\\e80b'; } /* '' */\n.bpmn-icon-intermediate-event-catch-non-interrupting-timer:before { content: '\\e80c'; } /* '' */\n.bpmn-icon-intermediate-event-catch-parallel-multiple:before { content: '\\e80d'; } /* '' */\n.bpmn-icon-intermediate-event-catch-compensation:before { content: '\\e80e'; } /* '' */\n.bpmn-icon-gateway-xor:before { content: '\\e80f'; } /* '' */\n.bpmn-icon-connection:before { content: '\\e810'; } /* '' */\n.bpmn-icon-end-event-cancel:before { content: '\\e811'; } /* '' */\n.bpmn-icon-intermediate-event-catch-condition:before { content: '\\e812'; } /* '' */\n.bpmn-icon-intermediate-event-catch-non-interrupting-parallel-multiple:before { content: '\\e813'; } /* '' */\n.bpmn-icon-start-event-condition:before { content: '\\e814'; } /* '' */\n.bpmn-icon-start-event-non-interrupting-timer:before { content: '\\e815'; } /* '' */\n.bpmn-icon-sequential-mi-marker:before { content: '\\e816'; } /* '' */\n.bpmn-icon-user-task:before { content: '\\e817'; } /* '' */\n.bpmn-icon-business-rule:before { content: '\\e818'; } /* '' */\n.bpmn-icon-sub-process-marker:before { content: '\\e819'; } /* '' */\n.bpmn-icon-start-event-parallel-multiple:before { content: '\\e81a'; } /* '' */\n.bpmn-icon-start-event-error:before { content: '\\e81b'; } /* '' */\n.bpmn-icon-intermediate-event-catch-signal:before { content: '\\e81c'; } /* '' */\n.bpmn-icon-intermediate-event-catch-error:before { content: '\\e81d'; } /* '' */\n.bpmn-icon-end-event-compensation:before { content: '\\e81e'; } /* '' */\n.bpmn-icon-subprocess-collapsed:before { content: '\\e81f'; } /* '' */\n.bpmn-icon-subprocess-expanded:before { content: '\\e820'; } /* '' */\n.bpmn-icon-task:before { content: '\\e821'; } /* '' */\n.bpmn-icon-end-event-error:before { content: '\\e822'; } /* '' */\n.bpmn-icon-intermediate-event-catch-escalation:before { content: '\\e823'; } /* '' */\n.bpmn-icon-intermediate-event-catch-timer:before { content: '\\e824'; } /* '' */\n.bpmn-icon-start-event-escalation:before { content: '\\e825'; } /* '' */\n.bpmn-icon-start-event-signal:before { content: '\\e826'; } /* '' */\n.bpmn-icon-business-rule-task:before { content: '\\e827'; } /* '' */\n.bpmn-icon-manual:before { content: '\\e828'; } /* '' */\n.bpmn-icon-receive:before { content: '\\e829'; } /* '' */\n.bpmn-icon-call-activity:before { content: '\\e82a'; } /* '' */\n.bpmn-icon-start-event-timer:before { content: '\\e82b'; } /* '' */\n.bpmn-icon-start-event-message:before { content: '\\e82c'; } /* '' */\n.bpmn-icon-intermediate-event-none:before { content: '\\e82d'; } /* '' */\n.bpmn-icon-intermediate-event-catch-link:before { content: '\\e82e'; } /* '' */\n.bpmn-icon-end-event-escalation:before { content: '\\e82f'; } /* '' */\n.bpmn-icon-text-annotation:before { content: '\\e830'; } /* '' */\n.bpmn-icon-bpmn-io:before { content: '\\e831'; } /* '' */\n.bpmn-icon-gateway-complex:before { content: '\\e832'; } /* '' */\n.bpmn-icon-gateway-eventbased:before { content: '\\e833'; } /* '' */\n.bpmn-icon-gateway-none:before { content: '\\e834'; } /* '' */\n.bpmn-icon-gateway-or:before { content: '\\e835'; } /* '' */\n.bpmn-icon-end-event-terminate:before { content: '\\e836'; } /* '' */\n.bpmn-icon-end-event-signal:before { content: '\\e837'; } /* '' */\n.bpmn-icon-end-event-none:before { content: '\\e838'; } /* '' */\n.bpmn-icon-end-event-multiple:before { content: '\\e839'; } /* '' */\n.bpmn-icon-end-event-message:before { content: '\\e83a'; } /* '' */\n.bpmn-icon-end-event-link:before { content: '\\e83b'; } /* '' */\n.bpmn-icon-intermediate-event-catch-message:before { content: '\\e83c'; } /* '' */\n.bpmn-icon-intermediate-event-throw-compensation:before { content: '\\e83d'; } /* '' */\n.bpmn-icon-start-event-multiple:before { content: '\\e83e'; } /* '' */\n.bpmn-icon-script:before { content: '\\e83f'; } /* '' */\n.bpmn-icon-manual-task:before { content: '\\e840'; } /* '' */\n.bpmn-icon-send:before { content: '\\e841'; } /* '' */\n.bpmn-icon-service:before { content: '\\e842'; } /* '' */\n.bpmn-icon-receive-task:before { content: '\\e843'; } /* '' */\n.bpmn-icon-user:before { content: '\\e844'; } /* '' */\n.bpmn-icon-start-event-none:before { content: '\\e845'; } /* '' */\n.bpmn-icon-intermediate-event-throw-escalation:before { content: '\\e846'; } /* '' */\n.bpmn-icon-intermediate-event-catch-multiple:before { content: '\\e847'; } /* '' */\n.bpmn-icon-intermediate-event-catch-non-interrupting-escalation:before { content: '\\e848'; } /* '' */\n.bpmn-icon-intermediate-event-throw-link:before { content: '\\e849'; } /* '' */\n.bpmn-icon-start-event-non-interrupting-condition:before { content: '\\e84a'; } /* '' */\n.bpmn-icon-data-object:before { content: '\\e84b'; } /* '' */\n.bpmn-icon-script-task:before { content: '\\e84c'; } /* '' */\n.bpmn-icon-send-task:before { content: '\\e84d'; } /* '' */\n.bpmn-icon-data-store:before { content: '\\e84e'; } /* '' */\n.bpmn-icon-start-event-non-interrupting-escalation:before { content: '\\e84f'; } /* '' */\n.bpmn-icon-intermediate-event-throw-message:before { content: '\\e850'; } /* '' */\n.bpmn-icon-intermediate-event-catch-non-interrupting-multiple:before { content: '\\e851'; } /* '' */\n.bpmn-icon-intermediate-event-catch-non-interrupting-signal:before { content: '\\e852'; } /* '' */\n.bpmn-icon-intermediate-event-throw-multiple:before { content: '\\e853'; } /* '' */\n.bpmn-icon-start-event-non-interrupting-message:before { content: '\\e854'; } /* '' */\n.bpmn-icon-ad-hoc-marker:before { content: '\\e855'; } /* '' */\n.bpmn-icon-service-task:before { content: '\\e856'; } /* '' */\n.bpmn-icon-task-none:before { content: '\\e857'; } /* '' */\n.bpmn-icon-compensation-marker:before { content: '\\e858'; } /* '' */\n.bpmn-icon-start-event-non-interrupting-multiple:before { content: '\\e859'; } /* '' */\n.bpmn-icon-intermediate-event-throw-signal:before { content: '\\e85a'; } /* '' */\n.bpmn-icon-intermediate-event-catch-non-interrupting-condition:before { content: '\\e85b'; } /* '' */\n.bpmn-icon-participant:before { content: '\\e85c'; } /* '' */\n.bpmn-icon-event-subprocess-expanded:before { content: '\\e85d'; } /* '' */\n.bpmn-icon-lane-insert-below:before { content: '\\e85e'; } /* '' */\n.bpmn-icon-space-tool:before { content: '\\e85f'; } /* '' */\n.bpmn-icon-connection-multi:before { content: '\\e860'; } /* '' */\n.bpmn-icon-lane:before { content: '\\e861'; } /* '' */\n.bpmn-icon-lasso-tool:before { content: '\\e862'; } /* '' */\n.bpmn-icon-lane-insert-above:before { content: '\\e863'; } /* '' */\n.bpmn-icon-lane-divide-three:before { content: '\\e864'; } /* '' */\n.bpmn-icon-lane-divide-two:before { content: '\\e865'; } /* '' */\n.bpmn-icon-data-input:before { content: '\\e866'; } /* '' */\n.bpmn-icon-data-output:before { content: '\\e867'; } /* '' */\n.bpmn-icon-hand-tool:before { content: '\\e868'; } /* '' */\n.bpmn-icon-group:before { content: '\\e869'; } /* '' */\n.bpmn-icon-transaction:before { content: '\\e8c4'; } /* '' */");
 
 /***/ }),
 

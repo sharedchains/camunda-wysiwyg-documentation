@@ -1,7 +1,5 @@
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 
-import css from '!!raw-loader!bpmn-font/dist/css/bpmn.css';
-
 /*
 * Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
 * Each element of the array is an object node from bpmn-js
@@ -17,6 +15,9 @@ const Exporter = (hierarchy) => {
     const documentation = bo.get('documentation');
     const camel = bo.$type.substring(5);
     let dashed = 'bpmn-icon' + camel.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+    if (dashed.endsWith('start-event') || dashed.endsWith('end-event')) {
+      dashed += '-none';
+    }
     let icon = `<span class="${dashed}"></span>`;
     if (documentation.length > 0) {
 
@@ -39,7 +40,7 @@ const Exporter = (hierarchy) => {
     <meta charset="utf-8">
     <title>Documentation</title>
     
-    <style>${css}</style>
+    <link rel="stylesheet" type="text/css" href="https://rawcdn.githack.com/bpmn-io/bpmn-font/master/dist/css/bpmn.css" />
     <style>
         h1 {
             text-align: center;
