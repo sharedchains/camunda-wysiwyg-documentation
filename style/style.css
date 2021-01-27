@@ -78,7 +78,7 @@ input[id$="-documentation"] {
 
 .toolbarBtn:not(.disabled):hover,
 .toolbarBtn.active {
-    background-color: #676 !important;
+    background-color: #eee !important;
     border: solid 1px #ccc;
 }
 

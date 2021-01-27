@@ -830,6 +830,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+
 const defaultState = {
   modeler: null,
   tabModeler: [],
@@ -841,48 +842,73 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
   constructor(props) {
     super(props);
 
-    _defineProperty(this, "exportDiagram", async modeler => {
-      const elementRegistry = modeler.get('elementRegistry'); // Ottengo tutti gli elementi che presentano documentazione
-
-      let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.default(elementRegistry);
-      const elements = utils.getAllElementsWithDocumentation(); // console.log(this.stringify({ elements: elements}, 2, null, 2));
-
-      let file = {
-        contents: (0,_utils_Exporter__WEBPACK_IMPORTED_MODULE_4__.default)(elements).export(),
-        name: 'documentation.html',
-        fileType: 'html'
-      };
+    _defineProperty(this, "exportDiagram", async (modeler, flowType) => {
       const {
         config
       } = this.props;
-      let savePath = await config.backend.send('dialog:save-file', {
-        title: 'Export Documentation',
-        saveAs: true,
-        filters: [{
-          name: 'HTML',
-          extensions: ['html']
-        }],
-        file: file
-      });
+      const elementRegistry = modeler.get('elementRegistry');
+      const canvas = modeler.get('canvas'); // Ottengo tutti gli elementi che presentano documentazione
 
-      if (savePath) {
-        config.backend.send('file:write', savePath, file, {
-          encoding: 'utf8',
-          fileType: 'html'
-        }).then(resolve => {
-          if (resolve) {
-            config.backend.send('dialog:show', {
-              message: 'Documentation was exported correctly!',
-              title: 'Exported documentation',
-              type: 'info'
+      let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.default(elementRegistry);
+      let elementsToExport = [];
+
+      switch (flowType) {
+        case _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.DIAGRAM_FLOW:
+          {
+            let startEvents = utils.getStartEvents();
+            startEvents.forEach(startEvent => {
+              elementsToExport = elementsToExport.concat(utils.navigateFromStartEvent(startEvent));
             });
+            break;
           }
-        }).catch(error => {
-          config.backend.send('dialog:show', {
-            message: 'Unexpected failure exporting documentation!',
-            title: 'Error exporting documentation',
-            type: 'error'
+
+        case _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.DOCUMENTATION_ORDER_FLOW:
+          elementsToExport = [];
+          break;
+      }
+
+      if (elementsToExport.length > 0) {
+        let file = {
+          contents: (0,_utils_Exporter__WEBPACK_IMPORTED_MODULE_4__.default)(elementsToExport, canvas).export(),
+          name: 'documentation.html',
+          fileType: 'html'
+        };
+        let savePath = await config.backend.send('dialog:save-file', {
+          title: 'Export Documentation',
+          saveAs: true,
+          filters: [{
+            name: 'HTML',
+            extensions: ['html']
+          }],
+          file: file
+        });
+
+        if (savePath) {
+          config.backend.send('file:write', savePath, file, {
+            encoding: 'utf8',
+            fileType: 'html'
+          }).then(resolve => {
+            if (resolve) {
+              config.backend.send('dialog:show', {
+                message: 'Documentation was exported correctly!',
+                title: 'Exported documentation',
+                type: 'info'
+              });
+            }
+          }).catch(error => {
+            this.props.log.error(error);
+            config.backend.send('dialog:show', {
+              message: 'Unexpected failure exporting documentation!',
+              title: 'Error exporting documentation',
+              type: 'error'
+            });
           });
+        }
+      } else {
+        config.backend.send('dialog:show', {
+          message: 'No elements to export!',
+          title: 'Error exporting documentation',
+          type: 'error'
         });
       }
     });
@@ -977,6 +1003,7 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
       slot: "toolbar",
       group: "9_n_exportDocumentation"
     }, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+      title: "Export mode",
       type: "button",
       className: classnames__WEBPACK_IMPORTED_MODULE_2___default()('toolbarBtn', this.state.exportMode ? 'active' : null),
       onClick: () => {
@@ -985,10 +1012,18 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
     }, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
       className: "icon-button bpmn-icon-screw-wrench"
     })), /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+      title: "Export on diagram flow",
       type: "button",
       className: classnames__WEBPACK_IMPORTED_MODULE_2___default()('exportBtn', 'toolbarBtn'),
       onClick: () => {
-        this.exportDiagram(activeTab.modeler);
+        this.exportDiagram(activeTab.modeler, _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.DIAGRAM_FLOW);
+      }
+    }), /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+      title: "Export on documentation order",
+      type: "button",
+      className: classnames__WEBPACK_IMPORTED_MODULE_2___default()('exportBtn', 'toolbarBtn'),
+      onClick: () => {
+        this.exportDiagram(activeTab.modeler, _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__.DOCUMENTATION_ORDER_FLOW);
       }
     })));
   }
@@ -1034,37 +1069,64 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__
 /* harmony export */ });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
+
 
 /*
 * Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
 * Each element of the array is an object node from bpmn-js
 * */
 
-const Exporter = hierarchy => {
+const Exporter = (hierarchy, canvas) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
+
+  function getElementDocumentation(businessObject) {
+    return businessObject.get('documentation').length > 0 ? businessObject.get('documentation')[0].get('text') : '';
+  }
+
+  function getElementIcon(element) {
+    let width = Math.ceil(element.width / 10) * 10;
+    let height = Math.ceil(element.height / 10) * 10;
+    let canvasElement = (0,min_dom__WEBPACK_IMPORTED_MODULE_0__.query)(`g[data-element-id="${element.id}"] > .djs-visual`, canvas.getContainer());
+    canvasElement = canvasElement.cloneNode(true);
+    let icon = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${canvasElement.outerHTML}</svg>`;
+    return icon;
+  }
+
   hierarchy.forEach(element => {
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
     const elementId = element.id;
     const elementName = bo.get('name');
+    const elementType = bo.$type;
     const documentation = bo.get('documentation');
-    const camel = bo.$type.substring(5);
-    let dashed = 'bpmn-icon' + camel.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
 
-    if (dashed.endsWith('start-event') || dashed.endsWith('end-event')) {
-      dashed += '-none';
+    if (elementType === 'bpmn:StartEvent') {
+      let parentBo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element.parent);
+      const parentId = parentBo.get('id');
+      const parentName = parentBo.get('name'); // Check if it's a collaboration or something else, to add other markup
+
+      if ((0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(parentBo, 'bpmn:Participant')) {
+        docIndexes += `<h2 class="participant"><a href="#${parentId}">${parentName || parentId}</a></h2>`;
+        let docParentText = getElementDocumentation(parentBo); // Getting other documentation from process
+
+        const processDocumentation = getElementDocumentation(bo.$parent);
+        docParentText += processDocumentation ? `<br>${processDocumentation}` : '';
+        docHierarchy += `<div class="documentationElement participant" id="container-${parentId}"><h2><a name="${parentId}"></a><span class="bpmn-icon-participant"></span>&nbsp;${parentName || parentId}</h2>${docParentText}</div>`;
+      } else {
+        docIndexes += `<h2 class="process"><a href="#${parentId}">${parentName || parentId}</a></h2>`;
+        let docProcessText = getElementDocumentation(parentBo);
+        docHierarchy += `<div class="documentationElement process" id="container-${parentId}"><h2><a name="${parentId}"></a>&nbsp;${parentName || parentId}</h2>${docProcessText}</div>`;
+      }
     }
 
-    let icon = `<span class="${dashed}"></span>`;
-
-    if (documentation.length > 0) {
-      const anchorLink = `<a href="#${elementId}">${elementName || elementId}</a><br/>`;
-      docIndexes += anchorLink;
-      const docText = bo.get('documentation')[0].get('text');
-      const anchoredText = `<div class="documentationElement" id="container-${elementId}"><h2><a name="${elementId}"></a>${icon}&nbsp;${elementName || elementId}</h2>${docText}</div>`;
-      docHierarchy += anchoredText;
-    }
+    const icon = getElementIcon(element);
+    const anchorLink = `<a href="#${elementId}">${elementName || elementId}</a><br/>`;
+    docIndexes += anchorLink;
+    const docText = documentation.length > 0 ? documentation[0].get('text') : '';
+    const anchoredText = `<div class="documentationElement" id="container-${elementId}"><h2><a name="${elementId}"></a>${icon}&nbsp;${elementName || elementId}</h2>${docText}</div>`;
+    docHierarchy += anchoredText;
   });
 
   let getDocumentation = function () {
@@ -1080,7 +1142,7 @@ const Exporter = hierarchy => {
     
     <link rel="stylesheet" type="text/css" href="https://rawcdn.githack.com/bpmn-io/bpmn-font/master/dist/css/bpmn.css" />
     <style>
-        h1 {
+        h1, h2 {
             text-align: center;
         }
         
@@ -1122,31 +1184,36 @@ const Exporter = hierarchy => {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__
+/* harmony export */   "default": () => __WEBPACK_DEFAULT_EXPORT__,
+/* harmony export */   "DIAGRAM_FLOW": () => /* binding */ DIAGRAM_FLOW,
+/* harmony export */   "DOCUMENTATION_ORDER_FLOW": () => /* binding */ DOCUMENTATION_ORDER_FLOW
 /* harmony export */ });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 
 
 
 class exportUtils {
   constructor(elementRegistry) {
     _defineProperty(this, "hasDocumentation", element => {
-      let bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getBusinessObject)(element);
+      let bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
       const documentation = bo.get('documentation');
       return documentation.length > 0;
     });
 
     _defineProperty(this, "getStartEvents", () => {
-      return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.is)(element, 'bpmn:StartEvent') && element.type !== 'label' && !(0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.is)(element.parent, 'bpmn:SubProcess'));
+      return (0,lodash__WEBPACK_IMPORTED_MODULE_0__.orderBy)(this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:StartEvent') && element.type !== 'label' && !(0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element.parent, 'bpmn:SubProcess')), ['y', 'x'], ['asc', 'asc']);
     });
 
     _defineProperty(this, "getAllElementsWithDocumentation", () => {
-      return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.is)(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element));
+      return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element));
     });
 
     _defineProperty(this, "getAllElements", () => {
-      return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.is)(element, 'bpmn:FlowNode') && element.type !== 'label');
+      return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:FlowNode') && element.type !== 'label');
     });
 
     _defineProperty(this, "navigateFromStartEvent", startEvent => {
@@ -1155,7 +1222,7 @@ class exportUtils {
       }
 
       function getElementOutgoings(element) {
-        let outgoingSequenceFlows = element.outgoing.filter(outgoing => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.is)(outgoing, 'bpmn:SequenceFlow'));
+        let outgoingSequenceFlows = element.outgoing.filter(outgoing => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(outgoing, 'bpmn:SequenceFlow'));
         return outgoingSequenceFlows.map(outgoing => outgoing.target);
       }
 
@@ -1167,9 +1234,9 @@ class exportUtils {
         visited[element.id] = true;
         elementsArray.push(element);
 
-        if ((0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.is)(element, 'bpmn:SubProcess')) {
+        if ((0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:SubProcess')) {
           let subStartEvent = element.children.filter(function (child) {
-            return (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.is)(child, 'bpmn:StartEvent');
+            return (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(child, 'bpmn:StartEvent');
           })[0];
           let subProcessElements = dfs(subStartEvent);
           elementsArray.concat(subProcessElements);
@@ -1216,6 +1283,8 @@ class exportUtils {
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (exportUtils);
+const DIAGRAM_FLOW = 'DIAGRAM_FLOW';
+const DOCUMENTATION_ORDER_FLOW = 'DOCUMENTATION_ORDER_FLOW';
 
 /***/ }),
 

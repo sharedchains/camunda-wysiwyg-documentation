@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { find } from 'lodash';
 
 import Exporter from '../../utils/Exporter';
-import exportUtils from '../../utils/exportUtils';
+import exportUtils, { DIAGRAM_FLOW, DOCUMENTATION_ORDER_FLOW } from '../../utils/exportUtils';
 
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
 
@@ -59,45 +59,66 @@ class ExportToolbar extends Component {
     });
   }
 
-  exportDiagram = async (modeler) => {
-    const elementRegistry = modeler.get('elementRegistry');
-
-    // Ottengo tutti gli elementi che presentano documentazione
-    let utils = new exportUtils(elementRegistry);
-    const elements = utils.getAllElementsWithDocumentation();
-
-    // console.log(this.stringify({ elements: elements}, 2, null, 2));
-    let file = {
-      contents: Exporter(elements).export(),
-      name: 'documentation.html',
-      fileType: 'html'
-    };
+  exportDiagram = async (modeler, flowType) => {
     const {
       config
     } = this.props;
+    const elementRegistry = modeler.get('elementRegistry');
+    const canvas = modeler.get('canvas');
 
-    let savePath = await config.backend.send('dialog:save-file', {
-      title: 'Export Documentation',
-      saveAs: true,
-      filters: [{ name: 'HTML', extensions: ['html'] }],
-      file: file
-    });
+    // Ottengo tutti gli elementi che presentano documentazione
+    let utils = new exportUtils(elementRegistry);
+    let elementsToExport = [];
 
-    if (savePath) {
-      config.backend.send('file:write', savePath, file, { encoding: 'utf8', fileType: 'html' }).then((resolve) => {
-        if (resolve) {
+    switch (flowType) {
+    case DIAGRAM_FLOW: {
+      let startEvents = utils.getStartEvents();
+      startEvents.forEach((startEvent) => {
+        elementsToExport = elementsToExport.concat(utils.navigateFromStartEvent(startEvent));
+      });
+      break;
+    }
+    case DOCUMENTATION_ORDER_FLOW:
+      elementsToExport = [];
+      break;
+    }
+
+    if (elementsToExport.length > 0) {
+      let file = {
+        contents: Exporter(elementsToExport, canvas).export(),
+        name: 'documentation.html',
+        fileType: 'html'
+      };
+      let savePath = await config.backend.send('dialog:save-file', {
+        title: 'Export Documentation',
+        saveAs: true,
+        filters: [{ name: 'HTML', extensions: ['html'] }],
+        file: file
+      });
+
+      if (savePath) {
+        config.backend.send('file:write', savePath, file, { encoding: 'utf8', fileType: 'html' }).then((resolve) => {
+          if (resolve) {
+            config.backend.send('dialog:show', {
+              message: 'Documentation was exported correctly!',
+              title: 'Exported documentation',
+              type: 'info'
+            });
+          }
+        }).catch(error => {
+          this.props.log.error(error);
           config.backend.send('dialog:show', {
-            message: 'Documentation was exported correctly!',
-            title: 'Exported documentation',
-            type: 'info'
+            message: 'Unexpected failure exporting documentation!',
+            title: 'Error exporting documentation',
+            type: 'error'
           });
-        }
-      }).catch(error => {
-        config.backend.send('dialog:show', {
-          message: 'Unexpected failure exporting documentation!',
-          title: 'Error exporting documentation',
-          type: 'error'
         });
+      }
+    } else {
+      config.backend.send('dialog:show', {
+        message: 'No elements to export!',
+        title: 'Error exporting documentation',
+        type: 'error'
       });
     }
   };
@@ -131,11 +152,14 @@ class ExportToolbar extends Component {
     return (
       <Fragment>
         <Fill slot="toolbar" group="9_n_exportDocumentation">
-          <button type="button" className={classNames('toolbarBtn', this.state.exportMode ? 'active' : null)}
+          <button title="Export mode" type="button" className={classNames('toolbarBtn', this.state.exportMode ? 'active' : null)}
             onClick={() => {this.toggleExportMode(tabId);}}><span className="icon-button bpmn-icon-screw-wrench"/>
           </button>
-          <button type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
-            this.exportDiagram(activeTab.modeler);
+          <button title="Export on diagram flow" type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
+            this.exportDiagram(activeTab.modeler, DIAGRAM_FLOW);
+          }}/>
+          <button title="Export on documentation order" type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
+            this.exportDiagram(activeTab.modeler, DOCUMENTATION_ORDER_FLOW);
           }}/>
         </Fill>
       </Fragment>

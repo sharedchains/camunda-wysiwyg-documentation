@@ -1,5 +1,7 @@
 import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 
+import { orderBy } from 'lodash';
+
 class exportUtils {
 
   constructor(elementRegistry) {
@@ -13,10 +15,10 @@ class exportUtils {
   };
 
   getStartEvents = () => {
-    return this._elementRegistry.filter((element) =>
+    return orderBy(this._elementRegistry.filter((element) =>
       is(element, 'bpmn:StartEvent') &&
       element.type !== 'label' &&
-      !is(element.parent, 'bpmn:SubProcess'));
+      !is(element.parent, 'bpmn:SubProcess')), [ 'y', 'x'], ['asc', 'asc']);
   };
 
   getAllElementsWithDocumentation = () => {
@@ -90,3 +92,6 @@ class exportUtils {
 }
 
 export default exportUtils;
+
+export const DIAGRAM_FLOW = 'DIAGRAM_FLOW';
+export const DOCUMENTATION_ORDER_FLOW = 'DOCUMENTATION_ORDER_FLOW';
