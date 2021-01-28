@@ -104,8 +104,8 @@ function DisableModeling(eventBus, canvas, contextPad, dragging, directEditing, 
   throwIfModelingDisabled(modeling, 'removeConnection');
   throwIfModelingDisabled(modeling, 'replaceShape');
   throwIfModelingDisabled(modeling, 'pasteElements');
-  throwIfModelingDisabled(modeling, 'alignElements');
-  throwIfModelingDisabled(modeling, 'resizeShape');
+  throwIfModelingDisabled(modeling, 'alignElements'); // throwIfModelingDisabled(modeling, 'resizeShape');
+
   throwIfModelingDisabled(modeling, 'createSpace');
   throwIfModelingDisabled(modeling, 'updateWaypoints');
   throwIfModelingDisabled(modeling, 'reconnectStart');
@@ -160,16 +160,22 @@ function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry
   this._eventBus = eventBus;
   this._overlays = overlays;
   this._elementRegistry = elementRegistry;
-  eventBus.on('import.done', function () {
+
+  function updateOverlays() {
     self.overlayIds = {};
+    self.counter = 1;
     let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_3__.default(self._elementRegistry);
     let allNodes = utils.getAllElementsWithDocumentationOrder();
     allNodes.forEach(element => {
       let elementBo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(element);
       addNewOverlay(element, elementBo.order);
+      let split = elementBo.order.split('.');
+
+      if (self.counter < +split[0]) {
+        self.counter = +split[0];
+      }
     });
-    self.counter = allNodes.length + 1;
-  });
+  }
 
   function newOverlayBadgeForDocOrder(element, counter) {
     const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_5__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${counter}</div>`);
@@ -195,17 +201,57 @@ function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry
     };
   }
 
+  function getNextDocOrder(counter) {
+    let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_3__.default(self._elementRegistry);
+
+    if (!utils.notExistsDocOrder(undefined, counter)) {
+      return getNextDocOrder(counter + 1);
+    }
+
+    return counter;
+  }
+
+  eventBus.on('import.done', updateOverlays);
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.UPDATE_ELEMENTS_EVENT, 100, updateOverlays);
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.UPDATE_ELEMENT_EVENT, function (context) {
+    self._overlays.remove({
+      element: context.element,
+      type: 'docOrder-badge'
+    });
+
+    addNewOverlay(context.element, context.order);
+  });
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.REMOVE_DOCUMENTATION_ORDER_EVENT, function (context) {
+    let element = context.element;
+    let bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(element);
+    const overlayHistory = self.overlayIds[element.id];
+
+    if (overlayHistory) {
+      const overlayId = overlayHistory.overlayId; // Removing the overlay
+
+      self._overlays.remove(overlayId);
+
+      delete self.overlayIds[element.id]; // We force self.counter to update
+
+      self.counter = 1;
+      let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
+        order: undefined
+      });
+      commandStack.execute(command.cmd, command.context);
+    }
+  });
   eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.SET_DOCUMENTATION_ORDER_EVENT, function (context) {
     const element = context.element;
     const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(element);
 
     if (!bo.get('order') && (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.is)(element, 'bpmn:FlowNode')) {
+      let nextCounterValue = getNextDocOrder(self.counter);
       let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
-        order: self.counter
+        order: nextCounterValue
       });
       commandStack.execute(command.cmd, command.context);
-      addNewOverlay(element, self.counter);
-      self.counter++;
+      addNewOverlay(element, nextCounterValue);
+      self.counter = nextCounterValue;
     }
   });
   eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.UNSET_DOCUMENTATION_ORDER_EVENT, function (context) {
@@ -230,12 +276,12 @@ function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry
 
       delete self.overlayIds[element.id];
 
-      if (self.counter > 0) {
+      if (self.counter > 1) {
         self.counter--;
       } // Getting all the overlays with order > removedCounter and update them
 
 
-      const toUpdate = (0,lodash__WEBPACK_IMPORTED_MODULE_1__.sortBy)((0,lodash__WEBPACK_IMPORTED_MODULE_1__.filter)(self.overlayIds, overlay => overlay.order > removedCounter), ['order']);
+      const toUpdate = (0,lodash__WEBPACK_IMPORTED_MODULE_1__.sortBy)((0,lodash__WEBPACK_IMPORTED_MODULE_1__.filter)(self.overlayIds, overlay => overlay.order >= removedCounter), ['order']);
       toUpdate.forEach(overlayIdObject => {
         let updateBo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(overlayIdObject.element);
         let decreasedOrder = overlayIdObject.order - 1;
@@ -365,12 +411,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(inherits__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/PropertiesActivator */ "./node_modules/bpmn-js-properties-panel/lib/PropertiesActivator.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/factory/EntryFactory */ "./node_modules/bpmn-js-properties-panel/lib/factory/EntryFactory.js");
-/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _wysiwygDecorator__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./wysiwygDecorator */ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js");
-/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./wysiwygDecorator */ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js");
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+/* harmony import */ var _parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parts/DocumentationOrderProps */ "./client/bpmn-js-extension/propertiesProvider/parts/DocumentationOrderProps.js");
 
 
 
@@ -378,10 +423,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const MEDIUM_PRIORITY = 5000;
-function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider) {
+function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider, elementRegistry) {
   bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default().call(this, eventBus);
   const self = this;
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_5__.TOGGLE_MODE_EVENT, MEDIUM_PRIORITY, function (context) {
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__.TOGGLE_MODE_EVENT, MEDIUM_PRIORITY, function (context) {
     self.exportMode = context.exportMode;
     eventBus.fire('selection.changed', {
       oldSelection: [],
@@ -392,23 +437,19 @@ function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translat
 
   propertiesProvider.getTabs = function (element) {
     const array = camundaGetTabs(element);
-    let generalTab = (0,lodash__WEBPACK_IMPORTED_MODULE_3__.find)(array, {
+    let generalTab = (0,lodash__WEBPACK_IMPORTED_MODULE_2__.find)(array, {
       id: 'general'
     });
-    let documentationTab = (0,lodash__WEBPACK_IMPORTED_MODULE_3__.find)(generalTab.groups, {
+    let documentationTab = (0,lodash__WEBPACK_IMPORTED_MODULE_2__.find)(generalTab.groups, {
       id: 'documentation'
     });
 
     if (documentationTab) {
       documentationTab.entries = documentationTab.entries.map(entry => {
-        return (0,_wysiwygDecorator__WEBPACK_IMPORTED_MODULE_4__.default)(translate, eventBus, commandStack, bpmnFactory, entry);
+        return (0,_wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__.default)(translate, eventBus, commandStack, bpmnFactory, entry);
       }); // Adding documentation order field
 
-      documentationTab.entries.push(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_2___default().textField(translate, {
-        id: 'documentation-order',
-        label: 'Documentation order',
-        modelProperty: 'order'
-      }));
+      documentationTab.entries.push((0,_parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_5__.default)(translate, elementRegistry, eventBus, element));
     }
 
     if (self.exportMode) {
@@ -420,7 +461,85 @@ function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translat
   };
 }
 inherits__WEBPACK_IMPORTED_MODULE_0___default()(WysiwygPropertiesProvider, (bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default()));
-WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider'];
+WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider', 'elementRegistry'];
+
+/***/ }),
+
+/***/ "./client/bpmn-js-extension/propertiesProvider/parts/DocumentationOrderProps.js":
+/*!**************************************************************************************!*\
+  !*** ./client/bpmn-js-extension/propertiesProvider/parts/DocumentationOrderProps.js ***!
+  \**************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => /* export default binding */ __WEBPACK_DEFAULT_EXPORT__
+/* harmony export */ });
+/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/factory/EntryFactory */ "./node_modules/bpmn-js-properties-panel/lib/factory/EntryFactory.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _utils_exportUtils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../utils/exportUtils */ "./client/utils/exportUtils.js");
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../utils/EventHelper */ "./client/utils/EventHelper.js");
+
+
+
+
+
+/* harmony default export */ function __WEBPACK_DEFAULT_EXPORT__(translate, elementRegistry, eventBus, element) {
+  return bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_0___default().validationAwareTextField(translate, {
+    id: 'documentation-order',
+    label: 'Documentation order',
+    modelProperty: 'order',
+    validate: function (el, values) {
+      let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_1__.default(elementRegistry);
+      let newValue = values['order'];
+
+      if (newValue) {
+        if (!/^(\d+\.)*(\d+)$/.test(newValue)) {
+          return {
+            'order': 'Value must be a number, optionally splitted by dots'
+          };
+        }
+
+        if (!utils.notExistsDocOrder(el.id, newValue)) {
+          return {
+            'order': 'Value already exists'
+          };
+        }
+      }
+
+      return {};
+    },
+    getProperty: function (elem) {
+      let bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(elem);
+      return bo.get('order');
+    },
+    setProperty: function (elem, values) {
+      let res = {};
+      let value = values['order'];
+
+      if (value !== undefined) {
+        res['order'] = value;
+
+        if (value) {
+          eventBus.fire(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_3__.UPDATE_ELEMENT_EVENT, {
+            element: elem,
+            order: value
+          });
+        } else {
+          eventBus.fire(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_3__.REMOVE_DOCUMENTATION_ORDER_EVENT, {
+            element: elem
+          });
+        }
+      }
+
+      return bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_2___default().updateProperties(element, res);
+    }
+  });
+}
 
 /***/ }),
 
@@ -1083,7 +1202,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "UPDATE_ELEMENT_EVENT": () => /* binding */ UPDATE_ELEMENT_EVENT,
 /* harmony export */   "UPDATE_ELEMENTS_EVENT": () => /* binding */ UPDATE_ELEMENTS_EVENT,
 /* harmony export */   "SET_DOCUMENTATION_ORDER_EVENT": () => /* binding */ SET_DOCUMENTATION_ORDER_EVENT,
-/* harmony export */   "UNSET_DOCUMENTATION_ORDER_EVENT": () => /* binding */ UNSET_DOCUMENTATION_ORDER_EVENT
+/* harmony export */   "UNSET_DOCUMENTATION_ORDER_EVENT": () => /* binding */ UNSET_DOCUMENTATION_ORDER_EVENT,
+/* harmony export */   "REMOVE_DOCUMENTATION_ORDER_EVENT": () => /* binding */ REMOVE_DOCUMENTATION_ORDER_EVENT
 /* harmony export */ });
 let prefix = 'exportDocumentation';
 const TOGGLE_MODE_EVENT = prefix + '.toggleMode';
@@ -1091,6 +1211,7 @@ const UPDATE_ELEMENT_EVENT = prefix + '.updateElement';
 const UPDATE_ELEMENTS_EVENT = prefix + '.updateElements';
 const SET_DOCUMENTATION_ORDER_EVENT = prefix + '.setDocumentationOrder';
 const UNSET_DOCUMENTATION_ORDER_EVENT = prefix + '.unsetDocumentationOrder';
+const REMOVE_DOCUMENTATION_ORDER_EVENT = prefix + '.removeDocumentationOrder';
 
 /***/ }),
 
@@ -1252,6 +1373,19 @@ class exportUtils {
 
     _defineProperty(this, "getAllElementsWithDocumentationOrder", () => {
       return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element));
+    });
+
+    _defineProperty(this, "notExistsDocOrder", (id, newDocOrder) => {
+      let array = this.getAllElementsWithDocumentationOrder();
+      return array.every(element => {
+        let bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
+
+        if (id) {
+          return bo.order !== newDocOrder || element.id === id;
+        } else {
+          return bo.order !== newDocOrder;
+        }
+      });
     });
 
     _defineProperty(this, "getAllElements", () => {

@@ -18,13 +18,25 @@ class exportUtils {
     return orderBy(this._elementRegistry.filter((element) =>
       is(element, 'bpmn:StartEvent') &&
       element.type !== 'label' &&
-      !is(element.parent, 'bpmn:SubProcess')), [ 'y', 'x'], ['asc', 'asc']);
+      !is(element.parent, 'bpmn:SubProcess')), ['y', 'x'], ['asc', 'asc']);
   };
 
   getAllElementsWithDocumentationOrder = () => {
     return this._elementRegistry.filter(
       (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element)
     );
+  };
+
+  notExistsDocOrder = (id, newDocOrder) => {
+    let array = this.getAllElementsWithDocumentationOrder();
+    return array.every((element) => {
+      let bo = getBusinessObject(element);
+      if (id) {
+        return bo.order !== newDocOrder || element.id === id;
+      } else {
+        return bo.order !== newDocOrder;
+      }
+    });
   };
 
   getAllElements = () => {

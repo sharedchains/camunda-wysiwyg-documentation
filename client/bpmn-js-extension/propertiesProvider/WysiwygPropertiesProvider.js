@@ -1,15 +1,15 @@
 import inherits from 'inherits';
 
 import PropertiesActivator from 'bpmn-js-properties-panel/lib/PropertiesActivator';
-import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 
 import { find } from 'lodash';
 import wysiwygDecorator from './wysiwygDecorator';
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
+import documentationOrderProps from './parts/DocumentationOrderProps';
 
 const MEDIUM_PRIORITY = 5000;
 
-export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider) {
+export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider, elementRegistry) {
   PropertiesActivator.call(this, eventBus);
 
   const self = this;
@@ -32,11 +32,7 @@ export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFa
       });
 
       // Adding documentation order field
-      documentationTab.entries.push(entryFactory.textField(translate,{
-        id: 'documentation-order',
-        label: 'Documentation order',
-        modelProperty: 'order'
-      }));
+      documentationTab.entries.push(documentationOrderProps(translate, elementRegistry, eventBus, element));
     }
     if (self.exportMode) {
       generalTab.groups = [documentationTab];
@@ -48,4 +44,4 @@ export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFa
 
 inherits(WysiwygPropertiesProvider, PropertiesActivator);
 
-WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider'];
+WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider', 'elementRegistry'];

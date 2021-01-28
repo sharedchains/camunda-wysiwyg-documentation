@@ -89,7 +89,8 @@ export default function DisableModeling(eventBus, canvas, contextPad, dragging, 
   throwIfModelingDisabled(modeling, 'replaceShape');
   throwIfModelingDisabled(modeling, 'pasteElements');
   throwIfModelingDisabled(modeling, 'alignElements');
-  throwIfModelingDisabled(modeling, 'resizeShape');
+
+  // throwIfModelingDisabled(modeling, 'resizeShape');
   throwIfModelingDisabled(modeling, 'createSpace');
   throwIfModelingDisabled(modeling, 'updateWaypoints');
   throwIfModelingDisabled(modeling, 'reconnectStart');
