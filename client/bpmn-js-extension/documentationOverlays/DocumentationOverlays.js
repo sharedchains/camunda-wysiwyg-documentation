@@ -1,6 +1,7 @@
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 import { domify } from 'min-dom';
+import { filter, sortBy } from 'lodash';
 
 import { SET_DOCUMENTATION_ORDER_EVENT, UNSET_DOCUMENTATION_ORDER_EVENT } from '../../utils/EventHelper';
 
@@ -16,6 +17,11 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack) 
 
   this.overlayIds = {};
   this.counter = 1;
+
+  eventBus.on('import.done', function() {
+
+    // TODO: Needs to update overlays
+  });
 
   eventBus.on(SET_DOCUMENTATION_ORDER_EVENT, function(context) {
     const element = context.element;
@@ -33,6 +39,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack) 
         scale: { min: 1 }
       });
       self.overlayIds[element.id] = {
+        id: element.id,
         overlayId : overlayId,
         order: self.counter
       };
@@ -46,18 +53,15 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack) 
 
     if (bo.get('order')) {
       const overlayHistory = self.overlayIds[element.id];
-
       if (!overlayHistory) {
         return;
       }
 
       const commands = [];
-      let command = cmdHelper.updateBusinessObject(element, bo, { order: undefined });
-      commands.push(command);
+      commands.push(cmdHelper.updateBusinessObject(element, bo, { order: undefined }));
 
       const overlayId = overlayHistory.overlayId;
-
-      // const removedCounter = overlayHistory.order;
+      const removedCounter = overlayHistory.order;
 
       // Removing the overlay
       self._overlays.remove(overlayId);
@@ -66,7 +70,10 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack) 
       // Getting all the overlays with order > removedCounter and update them
       // https://stackoverflow.com/questions/32349838/lodash-sorting-object-by-values-without-losing-the-key
 
-      // const toUpdate = filter(self.overlayIds, (element) => element.order > removedCounter);
+      const toUpdate = sortBy(filter(self.overlayIds, (overlay) => overlay.order > removedCounter), ['order']);
+      toUpdate.forEach((overlay) => {
+        console.log(overlay);
+      });
 
       commands.forEach((command) => {
         commandStack.execute(command.cmd, command.context);

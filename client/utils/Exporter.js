@@ -8,6 +8,15 @@ import { query } from 'min-dom';
 const Exporter = (hierarchy, canvas) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
+  canvas.zoom('fit-viewport');
+
+  let canvasSvg = query('.djs-container > svg', canvas.getContainer());
+
+  let clonedCanvasSvg = canvasSvg.cloneNode(true);
+  let sizes = canvasSvg.children[0].getBoundingClientRect();
+  clonedCanvasSvg.setAttribute('viewBox', `0 0 ${Math.ceil(sizes.width / 10) * 10} ${sizes.height}`);
+
+  let canvasImage = `<div class="canvasContainer">${clonedCanvasSvg.outerHTML}</div>`;
 
   function getElementDocumentation(businessObject) {
     return businessObject.get('documentation').length > 0 ? businessObject.get('documentation')[0].get('text') : '';
@@ -58,7 +67,7 @@ const Exporter = (hierarchy, canvas) => {
   });
 
   let getDocumentation = function() {
-    return docIndexes + '</div>' + docHierarchy + '</div>';
+    return canvasImage + docIndexes + '</div>' + docHierarchy + '</div>';
   };
 
   let exportDocumentation = function() {

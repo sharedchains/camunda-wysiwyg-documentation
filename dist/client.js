@@ -139,11 +139,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => /* binding */ DocumentationOverlays
 /* harmony export */ });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
-/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+
 
 
 
@@ -156,16 +159,18 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
   this._overlays = overlays;
   this.overlayIds = {};
   this.counter = 1;
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_1__.SET_DOCUMENTATION_ORDER_EVENT, function (context) {
+  eventBus.on('import.done', function () {// TODO: Needs to update overlays
+  });
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.SET_DOCUMENTATION_ORDER_EVENT, function (context) {
     const element = context.element;
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
 
     if (!bo.get('order')) {
       let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
         order: self.counter
       });
       commandStack.execute(command.cmd, command.context);
-      const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_3__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${self.counter}</div>`);
+      const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_4__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${self.counter}</div>`);
       const position = {
         bottom: OFFSET_BOTTOM,
         right: OFFSET_RIGHT
@@ -180,15 +185,16 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
       });
 
       self.overlayIds[element.id] = {
+        id: element.id,
         overlayId: overlayId,
         order: self.counter
       };
       self.counter++;
     }
   });
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_1__.UNSET_DOCUMENTATION_ORDER_EVENT, function (context) {
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.UNSET_DOCUMENTATION_ORDER_EVENT, function (context) {
     const element = context.element;
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
 
     if (bo.get('order')) {
       const overlayHistory = self.overlayIds[element.id];
@@ -198,19 +204,21 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
       }
 
       const commands = [];
-      let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
+      commands.push(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
         order: undefined
-      });
-      commands.push(command);
-      const overlayId = overlayHistory.overlayId; // const removedCounter = overlayHistory.order;
-      // Removing the overlay
+      }));
+      const overlayId = overlayHistory.overlayId;
+      const removedCounter = overlayHistory.order; // Removing the overlay
 
       self._overlays.remove(overlayId);
 
       delete self.overlayIds[element.id]; // Getting all the overlays with order > removedCounter and update them
       // https://stackoverflow.com/questions/32349838/lodash-sorting-object-by-values-without-losing-the-key
-      // const toUpdate = filter(self.overlayIds, (element) => element.order > removedCounter);
 
+      const toUpdate = (0,lodash__WEBPACK_IMPORTED_MODULE_1__.sortBy)((0,lodash__WEBPACK_IMPORTED_MODULE_1__.filter)(self.overlayIds, overlay => overlay.order > removedCounter), ['order']);
+      toUpdate.forEach(overlay => {
+        console.log(overlay);
+      });
       commands.forEach(command => {
         commandStack.execute(command.cmd, command.context);
       });
@@ -830,7 +838,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
-
 const defaultState = {
   modeler: null,
   tabModeler: [],
@@ -1081,6 +1088,12 @@ __webpack_require__.r(__webpack_exports__);
 const Exporter = (hierarchy, canvas) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
+  canvas.zoom('fit-viewport');
+  let canvasSvg = (0,min_dom__WEBPACK_IMPORTED_MODULE_0__.query)('.djs-container > svg', canvas.getContainer());
+  let clonedCanvasSvg = canvasSvg.cloneNode(true);
+  let sizes = canvasSvg.children[0].getBoundingClientRect();
+  clonedCanvasSvg.setAttribute('viewBox', `0 0 ${Math.ceil(sizes.width / 10) * 10} ${sizes.height}`);
+  let canvasImage = `<div class="canvasContainer">${clonedCanvasSvg.outerHTML}</div>`;
 
   function getElementDocumentation(businessObject) {
     return businessObject.get('documentation').length > 0 ? businessObject.get('documentation')[0].get('text') : '';
@@ -1130,7 +1143,7 @@ const Exporter = (hierarchy, canvas) => {
   });
 
   let getDocumentation = function () {
-    return docIndexes + '</div>' + docHierarchy + '</div>';
+    return canvasImage + docIndexes + '</div>' + docHierarchy + '</div>';
   };
 
   let exportDocumentation = function () {
