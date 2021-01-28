@@ -139,13 +139,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => /* binding */ DocumentationOverlays
 /* harmony export */ });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
+/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+/* harmony import */ var _utils_exportUtils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../utils/exportUtils */ "./client/utils/exportUtils.js");
+
 
 
 
@@ -153,50 +155,64 @@ __webpack_require__.r(__webpack_exports__);
 
 const OFFSET_BOTTOM = 10,
       OFFSET_RIGHT = 15;
-function DocumentationOverlays(eventBus, overlays, commandStack) {
+function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry) {
   const self = this;
   this._eventBus = eventBus;
   this._overlays = overlays;
-  this.overlayIds = {};
-  this.counter = 1;
-  eventBus.on('import.done', function () {// TODO: Needs to update overlays
+  this._elementRegistry = elementRegistry;
+  eventBus.on('import.done', function () {
+    self.overlayIds = {};
+    let utils = new _utils_exportUtils__WEBPACK_IMPORTED_MODULE_3__.default(self._elementRegistry);
+    let allNodes = utils.getAllElementsWithDocumentationOrder();
+    allNodes.forEach(element => {
+      let elementBo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(element);
+      addNewOverlay(element, elementBo.order);
+    });
+    self.counter = allNodes.length + 1;
   });
+
+  function newOverlayBadgeForDocOrder(element, counter) {
+    const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_5__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${counter}</div>`);
+    const position = {
+      bottom: OFFSET_BOTTOM,
+      right: OFFSET_RIGHT
+    };
+    return self._overlays.add(element, 'docOrder-badge', {
+      position: position,
+      html: overlayHtml,
+      scale: {
+        min: 1
+      }
+    });
+  }
+
+  function addNewOverlay(element, counter) {
+    const overlayId = newOverlayBadgeForDocOrder(element, counter);
+    self.overlayIds[element.id] = {
+      element: element,
+      overlayId: overlayId,
+      order: counter
+    };
+  }
+
   eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.SET_DOCUMENTATION_ORDER_EVENT, function (context) {
     const element = context.element;
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(element);
 
-    if (!bo.get('order')) {
+    if (!bo.get('order') && (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.is)(element, 'bpmn:FlowNode')) {
       let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(element, bo, {
         order: self.counter
       });
       commandStack.execute(command.cmd, command.context);
-      const overlayHtml = (0,min_dom__WEBPACK_IMPORTED_MODULE_4__.domify)(`<div class="documentation-order order-count" title="Documentation Order">${self.counter}</div>`);
-      const position = {
-        bottom: OFFSET_BOTTOM,
-        right: OFFSET_RIGHT
-      };
-
-      const overlayId = self._overlays.add(element, 'docOrder-badge', {
-        position: position,
-        html: overlayHtml,
-        scale: {
-          min: 1
-        }
-      });
-
-      self.overlayIds[element.id] = {
-        id: element.id,
-        overlayId: overlayId,
-        order: self.counter
-      };
+      addNewOverlay(element, self.counter);
       self.counter++;
     }
   });
   eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_2__.UNSET_DOCUMENTATION_ORDER_EVENT, function (context) {
     const element = context.element;
-    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_3__.getBusinessObject)(element);
+    const bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(element);
 
-    if (bo.get('order')) {
+    if (bo.get('order') && (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.is)(element, 'bpmn:FlowNode')) {
       const overlayHistory = self.overlayIds[element.id];
 
       if (!overlayHistory) {
@@ -212,12 +228,25 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
 
       self._overlays.remove(overlayId);
 
-      delete self.overlayIds[element.id]; // Getting all the overlays with order > removedCounter and update them
-      // https://stackoverflow.com/questions/32349838/lodash-sorting-object-by-values-without-losing-the-key
+      delete self.overlayIds[element.id];
+
+      if (self.counter > 0) {
+        self.counter--;
+      } // Getting all the overlays with order > removedCounter and update them
+
 
       const toUpdate = (0,lodash__WEBPACK_IMPORTED_MODULE_1__.sortBy)((0,lodash__WEBPACK_IMPORTED_MODULE_1__.filter)(self.overlayIds, overlay => overlay.order > removedCounter), ['order']);
-      toUpdate.forEach(overlay => {
-        console.log(overlay);
+      toUpdate.forEach(overlayIdObject => {
+        let updateBo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_4__.getBusinessObject)(overlayIdObject.element);
+        let decreasedOrder = overlayIdObject.order - 1;
+        commands.push(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default().updateBusinessObject(overlayIdObject.element, updateBo, {
+          order: decreasedOrder
+        }));
+
+        self._overlays.remove(overlayIdObject.overlayId);
+
+        overlayIdObject.overlayId = newOverlayBadgeForDocOrder(overlayIdObject.element, decreasedOrder);
+        overlayIdObject.order = decreasedOrder;
       });
       commands.forEach(command => {
         commandStack.execute(command.cmd, command.context);
@@ -225,7 +254,7 @@ function DocumentationOverlays(eventBus, overlays, commandStack) {
     }
   });
 }
-DocumentationOverlays.$inject = ['eventBus', 'overlays', 'commandStack'];
+DocumentationOverlays.$inject = ['eventBus', 'overlays', 'commandStack', 'elementRegistry'];
 
 /***/ }),
 
@@ -243,7 +272,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
 
 var HIGH_PRIORITY = 10001;
-function ExportMode(eventBus, contextPad) {
+function ExportMode(eventBus) {
   const self = this;
   this._eventBus = eventBus;
   this.exportMode = false;
@@ -251,9 +280,9 @@ function ExportMode(eventBus, contextPad) {
     self.exportMode = context.exportMode;
 
     if (self.exportMode) {
-      self._eventBus.on('selection.changed', 500, self.selectElement);
+      self._eventBus.on('selection.changed', 200, self.selectElement);
 
-      self._eventBus.on('element.contextmenu', self.rightSelectElement);
+      self._eventBus.on('element.contextmenu', 200, self.rightSelectElement);
     } else {
       self._eventBus.off('selection.changed', self.selectElement);
 
@@ -283,7 +312,7 @@ function ExportMode(eventBus, contextPad) {
     });
   };
 }
-ExportMode.$inject = ['eventBus', 'contextPad', 'overlays'];
+ExportMode.$inject = ['eventBus'];
 
 /***/ }),
 
@@ -348,11 +377,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const HIGH_PRIORITY = 10001;
+const MEDIUM_PRIORITY = 5000;
 function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider) {
   bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default().call(this, eventBus);
   const self = this;
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_5__.TOGGLE_MODE_EVENT, HIGH_PRIORITY, function (context) {
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_5__.TOGGLE_MODE_EVENT, MEDIUM_PRIORITY, function (context) {
     self.exportMode = context.exportMode;
     eventBus.fire('selection.changed', {
       oldSelection: [],
@@ -1211,18 +1240,18 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 class exportUtils {
   constructor(elementRegistry) {
-    _defineProperty(this, "hasDocumentation", element => {
+    _defineProperty(this, "hasDocumentationOrder", element => {
       let bo = (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
-      const documentation = bo.get('documentation');
-      return documentation.length > 0;
+      const docOrder = bo.get('order');
+      return !!docOrder;
     });
 
     _defineProperty(this, "getStartEvents", () => {
       return (0,lodash__WEBPACK_IMPORTED_MODULE_0__.orderBy)(this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:StartEvent') && element.type !== 'label' && !(0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element.parent, 'bpmn:SubProcess')), ['y', 'x'], ['asc', 'asc']);
     });
 
-    _defineProperty(this, "getAllElementsWithDocumentation", () => {
-      return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element));
+    _defineProperty(this, "getAllElementsWithDocumentationOrder", () => {
+      return this._elementRegistry.filter(element => (0,bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_1__.is)(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element));
     });
 
     _defineProperty(this, "getAllElements", () => {

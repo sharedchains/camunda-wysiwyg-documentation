@@ -6,7 +6,7 @@ import {
 
 var HIGH_PRIORITY = 10001;
 
-export default function ExportMode(eventBus, contextPad) {
+export default function ExportMode(eventBus) {
   const self = this;
 
   this._eventBus = eventBus;
@@ -16,8 +16,8 @@ export default function ExportMode(eventBus, contextPad) {
     self.exportMode = context.exportMode;
 
     if (self.exportMode) {
-      self._eventBus.on('selection.changed', 500, self.selectElement);
-      self._eventBus.on('element.contextmenu', self.rightSelectElement);
+      self._eventBus.on('selection.changed', 200, self.selectElement);
+      self._eventBus.on('element.contextmenu', 200, self.rightSelectElement);
     } else {
       self._eventBus.off('selection.changed', self.selectElement);
       self._eventBus.off('element.contextmenu', self.rightSelectElement);
@@ -46,7 +46,5 @@ export default function ExportMode(eventBus, contextPad) {
 }
 
 ExportMode.$inject = [
-  'eventBus',
-  'contextPad',
-  'overlays'
+  'eventBus'
 ];

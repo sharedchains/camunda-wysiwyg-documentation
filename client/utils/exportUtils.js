@@ -8,10 +8,10 @@ class exportUtils {
     this._elementRegistry = elementRegistry;
   }
 
-  hasDocumentation = (element) => {
+  hasDocumentationOrder = (element) => {
     let bo = getBusinessObject(element);
-    const documentation = bo.get('documentation');
-    return documentation.length > 0;
+    const docOrder = bo.get('order');
+    return !!docOrder;
   };
 
   getStartEvents = () => {
@@ -21,9 +21,9 @@ class exportUtils {
       !is(element.parent, 'bpmn:SubProcess')), [ 'y', 'x'], ['asc', 'asc']);
   };
 
-  getAllElementsWithDocumentation = () => {
+  getAllElementsWithDocumentationOrder = () => {
     return this._elementRegistry.filter(
-      (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentation(element)
+      (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element)
     );
   };
 

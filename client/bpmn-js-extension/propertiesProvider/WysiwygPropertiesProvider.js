@@ -7,14 +7,14 @@ import { find } from 'lodash';
 import wysiwygDecorator from './wysiwygDecorator';
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
 
-const HIGH_PRIORITY = 10001;
+const MEDIUM_PRIORITY = 5000;
 
 export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider) {
   PropertiesActivator.call(this, eventBus);
 
   const self = this;
 
-  eventBus.on(TOGGLE_MODE_EVENT, HIGH_PRIORITY, function(context) {
+  eventBus.on(TOGGLE_MODE_EVENT, MEDIUM_PRIORITY, function(context) {
     self.exportMode = context.exportMode;
 
     eventBus.fire('selection.changed', { oldSelection: [], newSelection: selection.get() });
