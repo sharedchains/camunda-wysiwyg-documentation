@@ -1050,7 +1050,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _utils_Exporter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/Exporter */ "./client/utils/Exporter.js");
+/* harmony import */ var _utils_exporter__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/exporter */ "./client/utils/exporter.js");
 /* harmony import */ var _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../utils/exportUtils */ "./client/utils/exportUtils.js");
 /* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -1094,13 +1094,13 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
           }
 
         case _utils_exportUtils__WEBPACK_IMPORTED_MODULE_5__["DOCUMENTATION_ORDER_FLOW"]:
-          elementsToExport = [];
+          elementsToExport = utils.getAllElementsWithDocumentationOrder();
           break;
       }
 
       if (elementsToExport.length > 0) {
         let file = {
-          contents: Object(_utils_Exporter__WEBPACK_IMPORTED_MODULE_4__["default"])(elementsToExport, canvas).export(),
+          contents: Object(_utils_exporter__WEBPACK_IMPORTED_MODULE_4__["default"])(elementsToExport, flowType, canvas).export(),
           name: 'documentation.html',
           fileType: 'html'
         };
@@ -1290,9 +1290,117 @@ const REMOVE_DOCUMENTATION_ORDER_EVENT = prefix + '.removeDocumentationOrder';
 
 /***/ }),
 
-/***/ "./client/utils/Exporter.js":
+/***/ "./client/utils/exportUtils.js":
+/*!*************************************!*\
+  !*** ./client/utils/exportUtils.js ***!
+  \*************************************/
+/*! exports provided: default, DIAGRAM_FLOW, DOCUMENTATION_ORDER_FLOW */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DIAGRAM_FLOW", function() { return DIAGRAM_FLOW; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DOCUMENTATION_ORDER_FLOW", function() { return DOCUMENTATION_ORDER_FLOW; });
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
+
+class exportUtils {
+  constructor(elementRegistry) {
+    _defineProperty(this, "hasDocumentationOrder", element => {
+      let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
+      const docOrder = bo.get('order');
+      return !!docOrder;
+    });
+
+    _defineProperty(this, "getStartEvents", () => {
+      return Object(lodash__WEBPACK_IMPORTED_MODULE_1__["orderBy"])(this._elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:StartEvent') && element.type !== 'label' && !Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element.parent, 'bpmn:SubProcess')), ['y', 'x'], ['asc', 'asc']);
+    });
+
+    _defineProperty(this, "getAllElementsWithDocumentationOrder", () => {
+      let elements = this._elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element));
+
+      return Object(lodash__WEBPACK_IMPORTED_MODULE_1__["orderBy"])(elements, [function (element) {
+        let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
+        return bo.get('order');
+      }], ['asc']);
+    });
+
+    _defineProperty(this, "notExistsDocOrder", (id, newDocOrder) => {
+      let array = this.getAllElementsWithDocumentationOrder();
+      return array.every(element => {
+        let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
+        let newDocOrderString = '' + newDocOrder;
+
+        if (id) {
+          return bo.order !== newDocOrderString || element.id === id;
+        } else {
+          return bo.order !== newDocOrderString;
+        }
+      });
+    });
+
+    _defineProperty(this, "navigateFromStartEvent", startEvent => {
+      if (!startEvent) {
+        return [];
+      }
+
+      function getElementOutgoings(element) {
+        let outgoingSequenceFlows = element.outgoing.filter(outgoing => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(outgoing, 'bpmn:SequenceFlow'));
+        return outgoingSequenceFlows.map(outgoing => outgoing.target);
+      }
+
+      const elementsArray = [];
+      const visited = {};
+
+      (function dfs(element) {
+        if (!element) return null;
+        visited[element.id] = true;
+        elementsArray.push(element);
+
+        if (Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:SubProcess')) {
+          let subStartEvent = element.children.filter(function (child) {
+            return Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(child, 'bpmn:StartEvent');
+          })[0];
+          let subProcessElements = dfs(subStartEvent);
+          elementsArray.concat(subProcessElements);
+        }
+
+        if (element.attachers && element.attachers.length > 0) {
+          element.attachers.forEach(attached => {
+            let boundaryElements = dfs(attached);
+            elementsArray.concat(boundaryElements);
+          });
+        }
+
+        getElementOutgoings(element).forEach(neighbour => {
+          if (!visited[neighbour.id]) {
+            return dfs(neighbour);
+          }
+        });
+      })(startEvent);
+
+      return elementsArray;
+    });
+
+    this._elementRegistry = elementRegistry;
+  }
+
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (exportUtils);
+const DIAGRAM_FLOW = 'DIAGRAM_FLOW';
+const DOCUMENTATION_ORDER_FLOW = 'DOCUMENTATION_ORDER_FLOW';
+
+/***/ }),
+
+/***/ "./client/utils/exporter.js":
 /*!**********************************!*\
-  !*** ./client/utils/Exporter.js ***!
+  !*** ./client/utils/exporter.js ***!
   \**********************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -1301,6 +1409,8 @@ const REMOVE_DOCUMENTATION_ORDER_EVENT = prefix + '.removeDocumentationOrder';
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
 /* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
+/* harmony import */ var _exportUtils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./exportUtils */ "./client/utils/exportUtils.js");
+
 
 
 /*
@@ -1308,7 +1418,7 @@ __webpack_require__.r(__webpack_exports__);
 * Each element of the array is an object node from bpmn-js
 * */
 
-const Exporter = (hierarchy, canvas) => {
+const exporter = (hierarchy, flowType, canvas) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
   canvas.zoom('fit-viewport');
@@ -1338,7 +1448,7 @@ const Exporter = (hierarchy, canvas) => {
     const elementType = bo.$type;
     const documentation = bo.get('documentation');
 
-    if (elementType === 'bpmn:StartEvent') {
+    if (flowType === _exportUtils__WEBPACK_IMPORTED_MODULE_2__["DIAGRAM_FLOW"] && elementType === 'bpmn:StartEvent') {
       let parentBo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element.parent);
       const parentId = parentBo.get('id');
       const parentName = parentBo.get('name'); // Check if it's a collaboration or something else, to add other markup
@@ -1407,132 +1517,7 @@ const Exporter = (hierarchy, canvas) => {
   };
 };
 
-/* harmony default export */ __webpack_exports__["default"] = (Exporter);
-
-/***/ }),
-
-/***/ "./client/utils/exportUtils.js":
-/*!*************************************!*\
-  !*** ./client/utils/exportUtils.js ***!
-  \*************************************/
-/*! exports provided: default, DIAGRAM_FLOW, DOCUMENTATION_ORDER_FLOW */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DIAGRAM_FLOW", function() { return DIAGRAM_FLOW; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DOCUMENTATION_ORDER_FLOW", function() { return DOCUMENTATION_ORDER_FLOW; });
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-
-
-
-class exportUtils {
-  constructor(elementRegistry) {
-    _defineProperty(this, "hasDocumentationOrder", element => {
-      let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
-      const docOrder = bo.get('order');
-      return !!docOrder;
-    });
-
-    _defineProperty(this, "getStartEvents", () => {
-      return Object(lodash__WEBPACK_IMPORTED_MODULE_1__["orderBy"])(this._elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:StartEvent') && element.type !== 'label' && !Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element.parent, 'bpmn:SubProcess')), ['y', 'x'], ['asc', 'asc']);
-    });
-
-    _defineProperty(this, "getAllElementsWithDocumentationOrder", () => {
-      return this._elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element));
-    });
-
-    _defineProperty(this, "notExistsDocOrder", (id, newDocOrder) => {
-      let array = this.getAllElementsWithDocumentationOrder();
-      return array.every(element => {
-        let bo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
-        let newDocOrderString = '' + newDocOrder;
-
-        if (id) {
-          return bo.order !== newDocOrderString || element.id === id;
-        } else {
-          return bo.order !== newDocOrderString;
-        }
-      });
-    });
-
-    _defineProperty(this, "getAllElements", () => {
-      return this._elementRegistry.filter(element => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:FlowNode') && element.type !== 'label');
-    });
-
-    _defineProperty(this, "navigateFromStartEvent", startEvent => {
-      if (!startEvent) {
-        return [];
-      }
-
-      function getElementOutgoings(element) {
-        let outgoingSequenceFlows = element.outgoing.filter(outgoing => Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(outgoing, 'bpmn:SequenceFlow'));
-        return outgoingSequenceFlows.map(outgoing => outgoing.target);
-      }
-
-      const elementsArray = [];
-      const visited = {};
-
-      (function dfs(element) {
-        if (!element) return null;
-        visited[element.id] = true;
-        elementsArray.push(element);
-
-        if (Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:SubProcess')) {
-          let subStartEvent = element.children.filter(function (child) {
-            return Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(child, 'bpmn:StartEvent');
-          })[0];
-          let subProcessElements = dfs(subStartEvent);
-          elementsArray.concat(subProcessElements);
-        }
-
-        if (element.attachers && element.attachers.length > 0) {
-          element.attachers.forEach(attached => {
-            let boundaryElements = dfs(attached);
-            elementsArray.concat(boundaryElements);
-          });
-        }
-
-        getElementOutgoings(element).forEach(neighbour => {
-          if (!visited[neighbour.id]) {
-            return dfs(neighbour);
-          }
-        });
-      })(startEvent);
-
-      return elementsArray;
-    });
-
-    _defineProperty(this, "stringify", function (val, depth, replacer, space) {
-      depth = isNaN(+depth) ? 1 : depth;
-
-      function _build(key, val, depth, o, a) {
-        // (JSON.stringify() has it's own rules, which we respect here by using it for property iteration)
-        return !val || typeof val != 'object' ? val : (a = Array.isArray(val), JSON.stringify(val, function (k, v) {
-          if (a || depth > 0) {
-            if (replacer) v = replacer(k, v);
-            if (!k) return a = Array.isArray(v), val = v;
-            !o && (o = a ? [] : {});
-            o[k] = _build(k, v, a ? depth : depth - 1);
-          }
-        }), o || (a ? [] : {}));
-      }
-
-      return JSON.stringify(_build('', val, depth), null, space);
-    });
-
-    this._elementRegistry = elementRegistry;
-  }
-
-}
-
-/* harmony default export */ __webpack_exports__["default"] = (exportUtils);
-const DIAGRAM_FLOW = 'DIAGRAM_FLOW';
-const DOCUMENTATION_ORDER_FLOW = 'DOCUMENTATION_ORDER_FLOW';
+/* harmony default export */ __webpack_exports__["default"] = (exporter);
 
 /***/ }),
 

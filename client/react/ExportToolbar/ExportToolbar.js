@@ -3,7 +3,7 @@ import { Fill } from 'camunda-modeler-plugin-helpers/components';
 import classNames from 'classnames';
 import { find } from 'lodash';
 
-import Exporter from '../../utils/Exporter';
+import exporter from '../../utils/exporter';
 import exportUtils, { DIAGRAM_FLOW, DOCUMENTATION_ORDER_FLOW } from '../../utils/exportUtils';
 
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
@@ -79,13 +79,13 @@ class ExportToolbar extends Component {
       break;
     }
     case DOCUMENTATION_ORDER_FLOW:
-      elementsToExport = [];
+      elementsToExport = utils.getAllElementsWithDocumentationOrder();
       break;
     }
 
     if (elementsToExport.length > 0) {
       let file = {
-        contents: Exporter(elementsToExport, canvas).export(),
+        contents: exporter(elementsToExport, flowType, canvas).export(),
         name: 'documentation.html',
         fileType: 'html'
       };

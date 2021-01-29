@@ -1,11 +1,13 @@
 import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import { query } from 'min-dom';
 
+import { DIAGRAM_FLOW } from './exportUtils';
+
 /*
 * Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
 * Each element of the array is an object node from bpmn-js
 * */
-const Exporter = (hierarchy, canvas) => {
+const exporter = (hierarchy, flowType, canvas) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
   canvas.zoom('fit-viewport');
@@ -38,7 +40,7 @@ const Exporter = (hierarchy, canvas) => {
     const elementType = bo.$type;
     const documentation = bo.get('documentation');
 
-    if (elementType === 'bpmn:StartEvent') {
+    if (flowType === DIAGRAM_FLOW && elementType === 'bpmn:StartEvent') {
       let parentBo = getBusinessObject(element.parent);
       const parentId = parentBo.get('id');
       const parentName = parentBo.get('name');
@@ -108,4 +110,4 @@ const Exporter = (hierarchy, canvas) => {
   };
 };
 
-export default Exporter;
+export default exporter;
