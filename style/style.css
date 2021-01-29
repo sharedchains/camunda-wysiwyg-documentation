@@ -84,19 +84,19 @@ input[id$="-documentation"] {
 
 /* Overlay badges */
 .documentation-order {
-    background-color: #FAFAFA;
+    border: 1px solid black;
     border-radius: 100%;
-    width: 25px;
-    height: 25px;
-    line-height: 25px;
+    min-width: 3vmin;
+    min-height: 3vmin;
+    line-height: 3vmin;
     text-align: center;
-    font-size: 16px;
-    color: #212121;
+    font-size: 25px;
+    font-size: medium;
     user-select: none;
+    padding: 2px;
+    box-sizing: content-box;
     /*animation: jump 1s infinite;*/
     /*animation-timing-function: ease;*/
-    position: relative;
-    top: 0;
 }
 
 .documentation-order.order-count {
