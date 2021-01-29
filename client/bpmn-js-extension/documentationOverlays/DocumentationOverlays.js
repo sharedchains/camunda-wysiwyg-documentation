@@ -6,9 +6,9 @@ import { filter, sortBy } from 'lodash';
 import {
   REMOVE_DOCUMENTATION_ORDER_EVENT,
   SET_DOCUMENTATION_ORDER_EVENT,
+  TOGGLE_MODE_EVENT,
   UNSET_DOCUMENTATION_ORDER_EVENT,
-  UPDATE_ELEMENT_EVENT,
-  UPDATE_ELEMENTS_EVENT
+  UPDATE_ELEMENT_EVENT
 } from '../../utils/EventHelper';
 import exportUtils from '../../utils/exportUtils';
 
@@ -21,6 +21,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
   this._eventBus = eventBus;
   this._overlays = overlays;
   this._elementRegistry = elementRegistry;
+  this.exportMode = false;
 
   function updateOverlays() {
     self.overlayIds = {};
@@ -39,6 +40,13 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
         self.counter = +split[0];
       }
     });
+  }
+
+  function clearOverlays() {
+    self.overlayIds = {};
+    self.counter = 1;
+
+    self._overlays.remove({ type: 'docOrder-badge' });
   }
 
   function newOverlayBadgeForDocOrder(element, counter) {
@@ -68,11 +76,21 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
     return counter;
   }
 
-  eventBus.on('import.done', updateOverlays);
-  eventBus.on(UPDATE_ELEMENTS_EVENT, 100, updateOverlays);
+  eventBus.on(TOGGLE_MODE_EVENT, 100, function(context) {
+    self.exportMode = context.exportMode;
+
+    if (context.exportMode) {
+      updateOverlays();
+    } else {
+      clearOverlays();
+    }
+  });
   eventBus.on(UPDATE_ELEMENT_EVENT, function(context) {
     self._overlays.remove({ element: context.element, type: 'docOrder-badge' });
-    addNewOverlay(context.element, context.order);
+
+    if (self.exportMode) {
+      addNewOverlay(context.element, context.order);
+    }
   });
   eventBus.on(REMOVE_DOCUMENTATION_ORDER_EVENT, function(context) {
     let element = context.element;

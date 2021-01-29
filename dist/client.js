@@ -232,6 +232,7 @@ function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry
   this._eventBus = eventBus;
   this._overlays = overlays;
   this._elementRegistry = elementRegistry;
+  this.exportMode = false;
 
   function updateOverlays() {
     self.overlayIds = {};
@@ -246,6 +247,15 @@ function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry
       if (self.counter < +split[0]) {
         self.counter = +split[0];
       }
+    });
+  }
+
+  function clearOverlays() {
+    self.overlayIds = {};
+    self.counter = 1;
+
+    self._overlays.remove({
+      type: 'docOrder-badge'
     });
   }
 
@@ -283,15 +293,24 @@ function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry
     return counter;
   }
 
-  eventBus.on('import.done', updateOverlays);
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__["UPDATE_ELEMENTS_EVENT"], 100, updateOverlays);
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__["TOGGLE_MODE_EVENT"], 100, function (context) {
+    self.exportMode = context.exportMode;
+
+    if (context.exportMode) {
+      updateOverlays();
+    } else {
+      clearOverlays();
+    }
+  });
   eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__["UPDATE_ELEMENT_EVENT"], function (context) {
     self._overlays.remove({
       element: context.element,
       type: 'docOrder-badge'
     });
 
-    addNewOverlay(context.element, context.order);
+    if (self.exportMode) {
+      addNewOverlay(context.element, context.order);
+    }
   });
   eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__["REMOVE_DOCUMENTATION_ORDER_EVENT"], function (context) {
     let element = context.element;
@@ -1269,21 +1288,19 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
 /*!*************************************!*\
   !*** ./client/utils/EventHelper.js ***!
   \*************************************/
-/*! exports provided: TOGGLE_MODE_EVENT, UPDATE_ELEMENT_EVENT, UPDATE_ELEMENTS_EVENT, SET_DOCUMENTATION_ORDER_EVENT, UNSET_DOCUMENTATION_ORDER_EVENT, REMOVE_DOCUMENTATION_ORDER_EVENT */
+/*! exports provided: TOGGLE_MODE_EVENT, UPDATE_ELEMENT_EVENT, SET_DOCUMENTATION_ORDER_EVENT, UNSET_DOCUMENTATION_ORDER_EVENT, REMOVE_DOCUMENTATION_ORDER_EVENT */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TOGGLE_MODE_EVENT", function() { return TOGGLE_MODE_EVENT; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "UPDATE_ELEMENT_EVENT", function() { return UPDATE_ELEMENT_EVENT; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "UPDATE_ELEMENTS_EVENT", function() { return UPDATE_ELEMENTS_EVENT; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SET_DOCUMENTATION_ORDER_EVENT", function() { return SET_DOCUMENTATION_ORDER_EVENT; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "UNSET_DOCUMENTATION_ORDER_EVENT", function() { return UNSET_DOCUMENTATION_ORDER_EVENT; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "REMOVE_DOCUMENTATION_ORDER_EVENT", function() { return REMOVE_DOCUMENTATION_ORDER_EVENT; });
 let prefix = 'exportDocumentation';
 const TOGGLE_MODE_EVENT = prefix + '.toggleMode';
 const UPDATE_ELEMENT_EVENT = prefix + '.updateElement';
-const UPDATE_ELEMENTS_EVENT = prefix + '.updateElements';
 const SET_DOCUMENTATION_ORDER_EVENT = prefix + '.setDocumentationOrder';
 const UNSET_DOCUMENTATION_ORDER_EVENT = prefix + '.unsetDocumentationOrder';
 const REMOVE_DOCUMENTATION_ORDER_EVENT = prefix + '.removeDocumentationOrder';
