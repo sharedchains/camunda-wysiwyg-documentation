@@ -81,12 +81,13 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
     if (overlayHistory) {
       const overlayId = overlayHistory.overlayId;
 
+      // Updating counter
+      const removedCounter = overlayHistory.order.split('.');
+      self.counter = +removedCounter[0] + 1;
+
       // Removing the overlay
       self._overlays.remove(overlayId);
       delete self.overlayIds[element.id];
-
-      // We force self.counter to update
-      self.counter = 1;
 
       let command = cmdHelper.updateBusinessObject(element, bo, { order: undefined });
       commandStack.execute(command.cmd, command.context);

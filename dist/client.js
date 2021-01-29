@@ -299,13 +299,14 @@ function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry
     const overlayHistory = self.overlayIds[element.id];
 
     if (overlayHistory) {
-      const overlayId = overlayHistory.overlayId; // Removing the overlay
+      const overlayId = overlayHistory.overlayId; // Updating counter
+
+      const removedCounter = overlayHistory.order.split('.');
+      self.counter = +removedCounter[0] + 1; // Removing the overlay
 
       self._overlays.remove(overlayId);
 
-      delete self.overlayIds[element.id]; // We force self.counter to update
-
-      self.counter = 1;
+      delete self.overlayIds[element.id];
       let command = bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_1___default.a.updateBusinessObject(element, bo, {
         order: undefined
       });
