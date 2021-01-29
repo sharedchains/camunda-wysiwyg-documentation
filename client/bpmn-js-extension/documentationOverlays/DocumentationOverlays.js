@@ -13,7 +13,7 @@ import {
 import exportUtils from '../../utils/exportUtils';
 
 const OFFSET_BOTTOM = 10,
-  OFFSET_RIGHT = 15;
+      OFFSET_RIGHT = 15;
 
 export default function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry) {
   const self = this;
