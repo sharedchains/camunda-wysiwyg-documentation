@@ -31,10 +31,11 @@ class exportUtils {
     let array = this.getAllElementsWithDocumentationOrder();
     return array.every((element) => {
       let bo = getBusinessObject(element);
+      let newDocOrderString = '' + newDocOrder;
       if (id) {
-        return bo.order !== newDocOrder || element.id === id;
+        return bo.order !== newDocOrderString || element.id === id;
       } else {
-        return bo.order !== newDocOrder;
+        return bo.order !== newDocOrderString;
       }
     });
   };

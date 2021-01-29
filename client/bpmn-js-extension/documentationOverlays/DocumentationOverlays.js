@@ -1,14 +1,14 @@
-import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
+import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 import { domify } from 'min-dom';
 import { filter, sortBy } from 'lodash';
 
 import {
+  REMOVE_DOCUMENTATION_ORDER_EVENT,
   SET_DOCUMENTATION_ORDER_EVENT,
   UNSET_DOCUMENTATION_ORDER_EVENT,
-  UPDATE_ELEMENTS_EVENT,
   UPDATE_ELEMENT_EVENT,
-  REMOVE_DOCUMENTATION_ORDER_EVENT
+  UPDATE_ELEMENTS_EVENT
 } from '../../utils/EventHelper';
 import exportUtils from '../../utils/exportUtils';
 
@@ -56,7 +56,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
     self.overlayIds[element.id] = {
       element: element,
       overlayId: overlayId,
-      order: counter
+      order: '' + counter
     };
   }
 
@@ -100,7 +100,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
     if (!bo.get('order') && is(element, 'bpmn:FlowNode')) {
       let nextCounterValue = getNextDocOrder(self.counter);
 
-      let command = cmdHelper.updateBusinessObject(element, bo, { order: nextCounterValue });
+      let command = cmdHelper.updateBusinessObject(element, bo, { order: '' + nextCounterValue });
       commandStack.execute(command.cmd, command.context);
 
       addNewOverlay(element, nextCounterValue);
@@ -132,17 +132,21 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
       }
 
       // Getting all the overlays with order > removedCounter and update them
-      const toUpdate = sortBy(filter(self.overlayIds, (overlay) => overlay.order >= removedCounter), ['order']);
+      const toUpdate = sortBy(filter(self.overlayIds, (overlay) => {
+        let split = overlay.order.split('.');
+        return +split[0] >= removedCounter;
+      }), ['order']);
       toUpdate.forEach((overlayIdObject) => {
         let updateBo = getBusinessObject(overlayIdObject.element);
 
-        // FIXME: Operations on order need to use SPLIT function
-        let decreasedOrder = overlayIdObject.order - 1;
-        commands.push(cmdHelper.updateBusinessObject(overlayIdObject.element, updateBo, { order: decreasedOrder }));
+        let split = overlayIdObject.order.split('.');
+        split[0] = +split[0] - 1;
+        let newOrder = split.join('.');
+        commands.push(cmdHelper.updateBusinessObject(overlayIdObject.element, updateBo, { order: newOrder }));
 
         self._overlays.remove(overlayIdObject.overlayId);
-        overlayIdObject.overlayId = newOverlayBadgeForDocOrder(overlayIdObject.element, decreasedOrder);
-        overlayIdObject.order = decreasedOrder;
+        overlayIdObject.overlayId = newOverlayBadgeForDocOrder(overlayIdObject.element, newOrder);
+        overlayIdObject.order = newOrder;
       });
 
       commands.forEach((command) => {
