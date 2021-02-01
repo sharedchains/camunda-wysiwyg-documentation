@@ -1118,40 +1118,61 @@ class ExportToolbar extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPORT
       }
 
       if (elementsToExport.length > 0) {
-        let file = {
-          contents: Object(_utils_exporter__WEBPACK_IMPORTED_MODULE_4__["default"])(elementsToExport, flowType, canvas).export(),
-          name: 'documentation.html',
-          fileType: 'html'
-        };
-        let savePath = await config.backend.send('dialog:save-file', {
-          title: 'Export Documentation',
-          saveAs: true,
-          filters: [{
-            name: 'HTML',
-            extensions: ['html']
-          }],
-          file: file
-        });
+        let svgImage;
+        let errorSvg;
 
-        if (savePath) {
-          config.backend.send('file:write', savePath, file, {
-            encoding: 'utf8',
+        try {
+          const {
+            svg
+          } = await modeler.saveSVG();
+          svgImage = svg;
+        } catch (err) {
+          errorSvg = err;
+        }
+
+        if (!errorSvg) {
+          let file = {
+            contents: Object(_utils_exporter__WEBPACK_IMPORTED_MODULE_4__["default"])(elementsToExport, flowType, canvas, svgImage).export(),
+            name: 'documentation.html',
             fileType: 'html'
-          }).then(resolve => {
-            if (resolve) {
+          };
+          let savePath = await config.backend.send('dialog:save-file', {
+            title: 'Export Documentation',
+            saveAs: true,
+            filters: [{
+              name: 'HTML',
+              extensions: ['html']
+            }],
+            file: file
+          });
+
+          if (savePath) {
+            config.backend.send('file:write', savePath, file, {
+              encoding: 'utf8',
+              fileType: 'html'
+            }).then(resolve => {
+              if (resolve) {
+                config.backend.send('dialog:show', {
+                  message: 'Documentation was exported correctly!',
+                  title: 'Exported documentation',
+                  type: 'info'
+                });
+              }
+            }).catch(error => {
+              this.props.log.error(error);
               config.backend.send('dialog:show', {
-                message: 'Documentation was exported correctly!',
-                title: 'Exported documentation',
-                type: 'info'
+                message: 'Unexpected failure exporting documentation!',
+                title: 'Error exporting documentation',
+                type: 'error'
               });
-            }
-          }).catch(error => {
-            this.props.log.error(error);
-            config.backend.send('dialog:show', {
-              message: 'Unexpected failure exporting documentation!',
-              title: 'Error exporting documentation',
-              type: 'error'
             });
+          }
+        } else {
+          this.props.log.error(errorSvg);
+          config.backend.send('dialog:show', {
+            message: 'Unexpected failure getting bpmn image!',
+            title: 'Error exporting documentation',
+            type: 'error'
           });
         }
       } else {
@@ -1435,15 +1456,10 @@ __webpack_require__.r(__webpack_exports__);
 * Each element of the array is an object node from bpmn-js
 * */
 
-const exporter = (hierarchy, flowType, canvas) => {
+const exporter = (hierarchy, flowType, canvas, svgImage) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
-  canvas.zoom('fit-viewport');
-  let canvasSvg = Object(min_dom__WEBPACK_IMPORTED_MODULE_1__["query"])('.djs-container > svg', canvas.getContainer());
-  let clonedCanvasSvg = canvasSvg.cloneNode(true);
-  let sizes = canvasSvg.children[0].getBoundingClientRect();
-  clonedCanvasSvg.setAttribute('viewBox', `0 0 ${Math.ceil(sizes.width / 10) * 10} ${sizes.height}`);
-  let canvasImage = `<div class="canvasContainer">${clonedCanvasSvg.outerHTML}</div>`;
+  let canvasImage = `<div class="canvasContainer">${svgImage}</div>`;
 
   function getElementDocumentation(businessObject) {
     return businessObject.get('documentation').length > 0 ? businessObject.get('documentation')[0].get('text') : '';

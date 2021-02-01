@@ -84,34 +84,54 @@ class ExportToolbar extends Component {
     }
 
     if (elementsToExport.length > 0) {
-      let file = {
-        contents: exporter(elementsToExport, flowType, canvas).export(),
-        name: 'documentation.html',
-        fileType: 'html'
-      };
-      let savePath = await config.backend.send('dialog:save-file', {
-        title: 'Export Documentation',
-        saveAs: true,
-        filters: [{ name: 'HTML', extensions: ['html'] }],
-        file: file
-      });
 
-      if (savePath) {
-        config.backend.send('file:write', savePath, file, { encoding: 'utf8', fileType: 'html' }).then((resolve) => {
-          if (resolve) {
+      let svgImage;
+      let errorSvg;
+
+      try {
+        const { svg } = await modeler.saveSVG();
+        svgImage = svg;
+      } catch (err) {
+        errorSvg = err;
+      }
+
+      if (!errorSvg) {
+        let file = {
+          contents: exporter(elementsToExport, flowType, canvas, svgImage).export(),
+          name: 'documentation.html',
+          fileType: 'html'
+        };
+        let savePath = await config.backend.send('dialog:save-file', {
+          title: 'Export Documentation',
+          saveAs: true,
+          filters: [{ name: 'HTML', extensions: ['html'] }],
+          file: file
+        });
+
+        if (savePath) {
+          config.backend.send('file:write', savePath, file, { encoding: 'utf8', fileType: 'html' }).then((resolve) => {
+            if (resolve) {
+              config.backend.send('dialog:show', {
+                message: 'Documentation was exported correctly!',
+                title: 'Exported documentation',
+                type: 'info'
+              });
+            }
+          }).catch(error => {
+            this.props.log.error(error);
             config.backend.send('dialog:show', {
-              message: 'Documentation was exported correctly!',
-              title: 'Exported documentation',
-              type: 'info'
+              message: 'Unexpected failure exporting documentation!',
+              title: 'Error exporting documentation',
+              type: 'error'
             });
-          }
-        }).catch(error => {
-          this.props.log.error(error);
-          config.backend.send('dialog:show', {
-            message: 'Unexpected failure exporting documentation!',
-            title: 'Error exporting documentation',
-            type: 'error'
           });
+        }
+      } else {
+        this.props.log.error(errorSvg);
+        config.backend.send('dialog:show', {
+          message: 'Unexpected failure getting bpmn image!',
+          title: 'Error exporting documentation',
+          type: 'error'
         });
       }
     } else {

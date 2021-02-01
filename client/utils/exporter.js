@@ -7,18 +7,10 @@ import { DIAGRAM_FLOW } from './exportUtils';
 * Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
 * Each element of the array is an object node from bpmn-js
 * */
-const exporter = (hierarchy, flowType, canvas) => {
+const exporter = (hierarchy, flowType, canvas, svgImage) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';
-  canvas.zoom('fit-viewport');
-
-  let canvasSvg = query('.djs-container > svg', canvas.getContainer());
-
-  let clonedCanvasSvg = canvasSvg.cloneNode(true);
-  let sizes = canvasSvg.children[0].getBoundingClientRect();
-  clonedCanvasSvg.setAttribute('viewBox', `0 0 ${Math.ceil(sizes.width / 10) * 10} ${sizes.height}`);
-
-  let canvasImage = `<div class="canvasContainer">${clonedCanvasSvg.outerHTML}</div>`;
+  let canvasImage = `<div class="canvasContainer">${svgImage}</div>`;
 
   function getElementDocumentation(businessObject) {
     return businessObject.get('documentation').length > 0 ? businessObject.get('documentation')[0].get('text') : '';
