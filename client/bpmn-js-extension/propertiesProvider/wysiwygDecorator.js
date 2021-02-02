@@ -1,7 +1,7 @@
-import { query as domQuery, domify } from 'min-dom';
+import { domify, query as domQuery } from 'min-dom';
 
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
-import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
+import { getCorrectBusinessObject } from './utils';
 
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 
@@ -34,15 +34,7 @@ const wysiwygDecorator = function(translate, eventBus, commandStack, bpmnFactory
     return cmdHelper.setList(element, businessObject, 'documentation', newObjectList);
   };
 
-  let getCorrectBusinessObject = function(element, isProcessDocumentation) {
-    let businessObject = getBusinessObject(element);
-    if (is(element, 'bpmn:Participant') && isProcessDocumentation) {
-      businessObject = businessObject.processRef;
-    }
-    return businessObject;
-  };
-
-  let replacedText = entryFactory.textField(translate, {
+  return entryFactory.textField(translate, {
     label: label,
     id: entry.id,
     modelProperty: modelProperty,
@@ -59,6 +51,16 @@ const wysiwygDecorator = function(translate, eventBus, commandStack, bpmnFactory
           data: entry.get(element).documentation,
           isProcessDocumentation: entry.id !== modelProperty
         });
+
+        eventBus.once('wysiwyg.saveData', 10000, function(event) {
+          const { element, data, isProcessDocumentation } = event;
+          let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { documentation: data });
+          if (updateElement) {
+            commandStack.execute(updateElement.cmd, updateElement.context);
+          }
+          return false;
+        });
+
         return true;
       }
     },
@@ -73,17 +75,6 @@ const wysiwygDecorator = function(translate, eventBus, commandStack, bpmnFactory
       return null;
     }
   });
-
-  eventBus.on('wysiwyg.saveData', function(event) {
-    const { element, data, isProcessDocumentation } = event;
-    let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { documentation: data });
-    if (updateElement) {
-      commandStack.execute(updateElement.cmd, updateElement.context);
-    }
-    return false;
-  });
-
-  return replacedText;
 };
 
 export default wysiwygDecorator;

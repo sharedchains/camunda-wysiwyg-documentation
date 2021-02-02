@@ -8,9 +8,41 @@
   "associations": [],
   "types": [
     {
+      "name": "BaseElement",
+      "extends": [
+        "bpmn:BaseElement"
+      ],
+      "properties": [
+        {
+          "name": "extendedDocumentation",
+          "type": "ExtendedDocumentation",
+          "isMany": true
+        }
+      ]
+    },
+    {
+      "name": "ExtendedDocumentation",
+      "superClass": [
+        "BaseElement"
+      ],
+      "properties": [
+        {
+          "name": "text",
+          "type": "String",
+          "isBody": true
+        },
+        {
+          "name": "textFormat",
+          "default": "text/plain",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
       "name": "DocumentationOrder",
       "extends": [
-        "bpmn:FlowNode"
+        "bpmn:BaseElement"
       ],
       "properties": [
         {

@@ -17,7 +17,7 @@
     height: 100%;
 }
 
-input[id$="-documentation"] {
+input[id$="-documentation"], input[id$="-extendedDocumentation"] {
     width: 90% !important;
     height: 25px !important;
 }

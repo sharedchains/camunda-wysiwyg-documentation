@@ -509,6 +509,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./wysiwygDecorator */ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js");
 /* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
 /* harmony import */ var _parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parts/DocumentationOrderProps */ "./client/bpmn-js-extension/propertiesProvider/parts/DocumentationOrderProps.js");
+/* harmony import */ var _parts_ExtendedDocumentationProps__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parts/ExtendedDocumentationProps */ "./client/bpmn-js-extension/propertiesProvider/parts/ExtendedDocumentationProps.js");
+
 
 
 
@@ -540,7 +542,9 @@ function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translat
     if (documentationTab) {
       documentationTab.entries = documentationTab.entries.map(entry => {
         return Object(_wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__["default"])(translate, eventBus, commandStack, bpmnFactory, entry);
-      }); // Adding documentation order field
+      }); // Adding extended documentation
+
+      documentationTab.entries = documentationTab.entries.concat(Object(_parts_ExtendedDocumentationProps__WEBPACK_IMPORTED_MODULE_6__["default"])(translate, eventBus, bpmnFactory, commandStack, element)); // Adding documentation order field
 
       documentationTab.entries.push(Object(_parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_5__["default"])(translate, elementRegistry, eventBus, element));
     }
@@ -565,7 +569,7 @@ WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 
 /*! exports provided: name, prefix, uri, xml, associations, types, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"Documentation properties\",\"prefix\":\"documentation\",\"uri\":\"http://documentation.sh4.red\",\"xml\":{\"tagAlias\":\"lowerCase\"},\"associations\":[],\"types\":[{\"name\":\"DocumentationOrder\",\"extends\":[\"bpmn:FlowNode\"],\"properties\":[{\"name\":\"order\",\"isAttr\":true,\"type\":\"String\"}]}]}");
+module.exports = JSON.parse("{\"name\":\"Documentation properties\",\"prefix\":\"documentation\",\"uri\":\"http://documentation.sh4.red\",\"xml\":{\"tagAlias\":\"lowerCase\"},\"associations\":[],\"types\":[{\"name\":\"BaseElement\",\"extends\":[\"bpmn:BaseElement\"],\"properties\":[{\"name\":\"extendedDocumentation\",\"type\":\"ExtendedDocumentation\",\"isMany\":true}]},{\"name\":\"ExtendedDocumentation\",\"superClass\":[\"BaseElement\"],\"properties\":[{\"name\":\"text\",\"type\":\"String\",\"isBody\":true},{\"name\":\"textFormat\",\"default\":\"text/plain\",\"isAttr\":true,\"type\":\"String\"}]},{\"name\":\"DocumentationOrder\",\"extends\":[\"bpmn:BaseElement\"],\"properties\":[{\"name\":\"order\",\"isAttr\":true,\"type\":\"String\"}]}]}");
 
 /***/ }),
 
@@ -602,7 +606,7 @@ __webpack_require__.r(__webpack_exports__);
       if (newValue) {
         if (!/^(\d+\.)*(\d+)$/.test(newValue)) {
           return {
-            'order': 'Value must be a number, optionally splitted by dots'
+            'order': 'Value must be a number, optionally split by dots'
           };
         }
 
@@ -645,6 +649,197 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./client/bpmn-js-extension/propertiesProvider/parts/ExtendedDocumentationProps.js":
+/*!*****************************************************************************************!*\
+  !*** ./client/bpmn-js-extension/propertiesProvider/parts/ExtendedDocumentationProps.js ***!
+  \*****************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/factory/EntryFactory */ "./node_modules/bpmn-js-properties-panel/lib/factory/EntryFactory.js");
+/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils */ "./client/bpmn-js-extension/propertiesProvider/utils.js");
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = (function (translate, eventBus, bpmnFactory, commandStack, providerElement) {
+  const entries = [];
+
+  let getValue = function (businessObject) {
+    let documentations = businessObject && businessObject.extendedDocumentation,
+        text = documentations && documentations.length > 0 ? documentations[0].text : '';
+    return {
+      extendedDocumentation: text
+    };
+  };
+
+  let setValue = function (businessObject, elem, values) {
+    let newObjectList = [];
+
+    if (typeof values.extendedDocumentation !== 'undefined' && values.extendedDocumentation !== '') {
+      newObjectList.push(bpmnFactory.create('documentation:ExtendedDocumentation', {
+        text: values.extendedDocumentation
+      }));
+    }
+
+    return bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default.a.setList(elem, businessObject, 'extendedDocumentation', newObjectList);
+  };
+
+  eventBus.once('wysiwyg.saveData', function (event) {
+    const {
+      element,
+      data,
+      isProcessDocumentation
+    } = event;
+    let updateElement = setValue(Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(element, isProcessDocumentation), element, {
+      extendedDocumentation: data
+    });
+
+    if (updateElement) {
+      commandStack.execute(updateElement.cmd, updateElement.context);
+    }
+
+    return false;
+  });
+  entries.push(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default.a.textField(translate, {
+    label: translate('Element extended documentation'),
+    id: 'extendedDocumentation',
+    modelProperty: 'extendedDocumentation',
+    buttonLabel: 'Edit',
+    disabled: function () {
+      return true;
+    },
+    buttonAction: {
+      name: 'openRichTextEditor',
+      method: function (elem, inputNode) {
+        let bo = Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(elem, false);
+        eventBus.fire('wysiwyg.open', {
+          element: elem,
+          node: inputNode,
+          data: getValue(bo).extendedDocumentation,
+          isProcessDocumentation: false
+        });
+        eventBus.once('wysiwyg.saveData', 10000, function (event) {
+          const {
+            element,
+            data,
+            isProcessDocumentation
+          } = event;
+          let updateElement = setValue(Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(element, isProcessDocumentation), element, {
+            extendedDocumentation: data
+          });
+
+          if (updateElement) {
+            commandStack.execute(updateElement.cmd, updateElement.context);
+          }
+
+          return false;
+        });
+        return true;
+      }
+    },
+    buttonShow: {
+      name: 'showRichTextEditor',
+      method: function () {
+        return true;
+      }
+    },
+    get: function (element) {
+      return getValue(Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(element, false));
+    },
+    set: function () {
+      return null;
+    }
+  })); // Process Documentation when having a Collaboration Diagram
+
+  if (Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(providerElement, 'bpmn:Participant')) {
+    entries.push(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default.a.textField(translate, {
+      label: translate('Process extended documentation'),
+      id: 'process-extendedDocumentation',
+      modelProperty: 'extendedDocumentation',
+      buttonLabel: 'Edit',
+      disabled: function () {
+        return true;
+      },
+      buttonAction: {
+        name: 'openRichTextEditor',
+        method: function (elem, inputNode) {
+          let bo = Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(elem, true);
+          eventBus.fire('wysiwyg.open', {
+            element: elem,
+            node: inputNode,
+            data: getValue(bo).extendedDocumentation,
+            isProcessDocumentation: true
+          });
+          eventBus.once('wysiwyg.saveData', 10000, function (event) {
+            const {
+              element,
+              data,
+              isProcessDocumentation
+            } = event;
+            let updateElement = setValue(Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(element, isProcessDocumentation), element, {
+              extendedDocumentation: data
+            });
+
+            if (updateElement) {
+              commandStack.execute(updateElement.cmd, updateElement.context);
+            }
+
+            return false;
+          });
+          return true;
+        }
+      },
+      buttonShow: {
+        name: 'showRichTextEditor',
+        method: function () {
+          return true;
+        }
+      },
+      get: function (element) {
+        return getValue(Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(element, true));
+      },
+      set: function () {
+        return null;
+      }
+    }));
+  }
+
+  return entries;
+});
+
+/***/ }),
+
+/***/ "./client/bpmn-js-extension/propertiesProvider/utils.js":
+/*!**************************************************************!*\
+  !*** ./client/bpmn-js-extension/propertiesProvider/utils.js ***!
+  \**************************************************************/
+/*! exports provided: getCorrectBusinessObject */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCorrectBusinessObject", function() { return getCorrectBusinessObject; });
+/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+
+const getCorrectBusinessObject = function (element, isProcessDocumentation) {
+  let businessObject = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element);
+
+  if (Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(element, 'bpmn:Participant') && isProcessDocumentation) {
+    businessObject = businessObject.processRef;
+  }
+
+  return businessObject;
+};
+
+/***/ }),
+
 /***/ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js":
 /*!*************************************************************************!*\
   !*** ./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js ***!
@@ -657,7 +852,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/factory/EntryFactory */ "./node_modules/bpmn-js-properties-panel/lib/factory/EntryFactory.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bpmn-js/lib/util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./client/bpmn-js-extension/propertiesProvider/utils.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
 /* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3__);
 
@@ -695,17 +890,7 @@ const wysiwygDecorator = function (translate, eventBus, commandStack, bpmnFactor
     return bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3___default.a.setList(element, businessObject, 'documentation', newObjectList);
   };
 
-  let getCorrectBusinessObject = function (element, isProcessDocumentation) {
-    let businessObject = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["getBusinessObject"])(element);
-
-    if (Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_2__["is"])(element, 'bpmn:Participant') && isProcessDocumentation) {
-      businessObject = businessObject.processRef;
-    }
-
-    return businessObject;
-  };
-
-  let replacedText = bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default.a.textField(translate, {
+  return bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default.a.textField(translate, {
     label: label,
     id: entry.id,
     modelProperty: modelProperty,
@@ -722,6 +907,22 @@ const wysiwygDecorator = function (translate, eventBus, commandStack, bpmnFactor
           data: entry.get(element).documentation,
           isProcessDocumentation: entry.id !== modelProperty
         });
+        eventBus.once('wysiwyg.saveData', 10000, function (event) {
+          const {
+            element,
+            data,
+            isProcessDocumentation
+          } = event;
+          let updateElement = setValue(Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getCorrectBusinessObject"])(element, isProcessDocumentation), element, {
+            documentation: data
+          });
+
+          if (updateElement) {
+            commandStack.execute(updateElement.cmd, updateElement.context);
+          }
+
+          return false;
+        });
         return true;
       }
     },
@@ -732,29 +933,12 @@ const wysiwygDecorator = function (translate, eventBus, commandStack, bpmnFactor
       }
     },
     get: function (element) {
-      return getValue(getCorrectBusinessObject(element, entry.id !== modelProperty));
+      return getValue(Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getCorrectBusinessObject"])(element, entry.id !== modelProperty));
     },
     set: function () {
       return null;
     }
   });
-  eventBus.on('wysiwyg.saveData', function (event) {
-    const {
-      element,
-      data,
-      isProcessDocumentation
-    } = event;
-    let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, {
-      documentation: data
-    });
-
-    if (updateElement) {
-      commandStack.execute(updateElement.cmd, updateElement.context);
-    }
-
-    return false;
-  });
-  return replacedText;
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (wysiwygDecorator);
