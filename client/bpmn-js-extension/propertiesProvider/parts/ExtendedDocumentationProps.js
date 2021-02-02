@@ -8,22 +8,13 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
   const entries = [];
 
   let getValue = function(businessObject) {
-    let documentations = businessObject && businessObject.extendedDocumentation,
-        text = (documentations && documentations.length > 0) ? documentations[0].text : '';
+    let documentation = businessObject && businessObject.extendedDocumentation;
 
-    return { extendedDocumentation: text };
+    return { extendedDocumentation: documentation };
   };
 
   let setValue = function(businessObject, elem, values) {
-    let newObjectList = [];
-
-    if (typeof values.extendedDocumentation !== 'undefined' && values.extendedDocumentation !== '') {
-      newObjectList.push(bpmnFactory.create('documentation:ExtendedDocumentation', {
-        text: values.extendedDocumentation
-      }));
-    }
-
-    return cmdHelper.setList(elem, businessObject, 'extendedDocumentation', newObjectList);
+    return cmdHelper.updateBusinessObject(elem, businessObject, values);
   };
 
   eventBus.once('wysiwyg.saveData', function(event) {

@@ -569,7 +569,7 @@ WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 
 /*! exports provided: name, prefix, uri, xml, associations, types, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"Documentation properties\",\"prefix\":\"documentation\",\"uri\":\"http://documentation.sh4.red\",\"xml\":{\"tagAlias\":\"lowerCase\"},\"associations\":[],\"types\":[{\"name\":\"BaseElement\",\"extends\":[\"bpmn:BaseElement\"],\"properties\":[{\"name\":\"extendedDocumentation\",\"type\":\"ExtendedDocumentation\",\"isMany\":true}]},{\"name\":\"ExtendedDocumentation\",\"superClass\":[\"BaseElement\"],\"properties\":[{\"name\":\"text\",\"type\":\"String\",\"isBody\":true},{\"name\":\"textFormat\",\"default\":\"text/plain\",\"isAttr\":true,\"type\":\"String\"}]},{\"name\":\"DocumentationOrder\",\"extends\":[\"bpmn:BaseElement\"],\"properties\":[{\"name\":\"order\",\"isAttr\":true,\"type\":\"String\"}]}]}");
+module.exports = JSON.parse("{\"name\":\"Documentation properties\",\"prefix\":\"documentation\",\"uri\":\"http://documentation.sh4.red\",\"xml\":{\"tagAlias\":\"lowerCase\"},\"associations\":[],\"types\":[{\"name\":\"ExtendedDocumentation\",\"extends\":[\"bpmn:BaseElement\"],\"properties\":[{\"name\":\"extendedDocumentation\",\"type\":\"String\",\"isAttr\":true},{\"name\":\"order\",\"isAttr\":true,\"type\":\"String\"}]}]}");
 
 /***/ }),
 
@@ -672,23 +672,14 @@ __webpack_require__.r(__webpack_exports__);
   const entries = [];
 
   let getValue = function (businessObject) {
-    let documentations = businessObject && businessObject.extendedDocumentation,
-        text = documentations && documentations.length > 0 ? documentations[0].text : '';
+    let documentation = businessObject && businessObject.extendedDocumentation;
     return {
-      extendedDocumentation: text
+      extendedDocumentation: documentation
     };
   };
 
   let setValue = function (businessObject, elem, values) {
-    let newObjectList = [];
-
-    if (typeof values.extendedDocumentation !== 'undefined' && values.extendedDocumentation !== '') {
-      newObjectList.push(bpmnFactory.create('documentation:ExtendedDocumentation', {
-        text: values.extendedDocumentation
-      }));
-    }
-
-    return bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default.a.setList(elem, businessObject, 'extendedDocumentation', newObjectList);
+    return bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default.a.updateBusinessObject(elem, businessObject, values);
   };
 
   eventBus.once('wysiwyg.saveData', function (event) {

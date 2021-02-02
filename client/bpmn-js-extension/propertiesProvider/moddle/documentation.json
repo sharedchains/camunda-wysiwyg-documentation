@@ -8,43 +8,16 @@
   "associations": [],
   "types": [
     {
-      "name": "BaseElement",
+      "name": "ExtendedDocumentation",
       "extends": [
         "bpmn:BaseElement"
       ],
       "properties": [
         {
           "name": "extendedDocumentation",
-          "type": "ExtendedDocumentation",
-          "isMany": true
-        }
-      ]
-    },
-    {
-      "name": "ExtendedDocumentation",
-      "superClass": [
-        "BaseElement"
-      ],
-      "properties": [
-        {
-          "name": "text",
           "type": "String",
-          "isBody": true
+          "isAttr": true
         },
-        {
-          "name": "textFormat",
-          "default": "text/plain",
-          "isAttr": true,
-          "type": "String"
-        }
-      ]
-    },
-    {
-      "name": "DocumentationOrder",
-      "extends": [
-        "bpmn:BaseElement"
-      ],
-      "properties": [
         {
           "name": "order",
           "isAttr": true,
