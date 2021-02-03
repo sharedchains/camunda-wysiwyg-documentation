@@ -506,11 +506,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./wysiwygDecorator */ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js");
-/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
-/* harmony import */ var _parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parts/DocumentationOrderProps */ "./client/bpmn-js-extension/propertiesProvider/parts/DocumentationOrderProps.js");
-/* harmony import */ var _parts_ExtendedDocumentationProps__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parts/ExtendedDocumentationProps */ "./client/bpmn-js-extension/propertiesProvider/parts/ExtendedDocumentationProps.js");
-
+/* harmony import */ var _utils_EventHelper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../utils/EventHelper */ "./client/utils/EventHelper.js");
+/* harmony import */ var _parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parts/DocumentationOrderProps */ "./client/bpmn-js-extension/propertiesProvider/parts/DocumentationOrderProps.js");
+/* harmony import */ var _parts_ExtendedDocumentationProps__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parts/ExtendedDocumentationProps */ "./client/bpmn-js-extension/propertiesProvider/parts/ExtendedDocumentationProps.js");
 
 
 
@@ -521,7 +519,7 @@ const MEDIUM_PRIORITY = 5000;
 function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider, elementRegistry) {
   bpmn_js_properties_panel_lib_PropertiesActivator__WEBPACK_IMPORTED_MODULE_1___default.a.call(this, eventBus);
   const self = this;
-  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_4__["TOGGLE_MODE_EVENT"], MEDIUM_PRIORITY, function (context) {
+  eventBus.on(_utils_EventHelper__WEBPACK_IMPORTED_MODULE_3__["TOGGLE_MODE_EVENT"], MEDIUM_PRIORITY, function (context) {
     self.exportMode = context.exportMode;
     eventBus.fire('selection.changed', {
       oldSelection: [],
@@ -540,13 +538,10 @@ function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translat
     });
 
     if (documentationTab) {
-      documentationTab.entries = documentationTab.entries.map(entry => {
-        return Object(_wysiwygDecorator__WEBPACK_IMPORTED_MODULE_3__["default"])(translate, eventBus, commandStack, bpmnFactory, entry);
-      }); // Adding extended documentation
+      // Adding extended documentation
+      documentationTab.entries = documentationTab.entries.concat(Object(_parts_ExtendedDocumentationProps__WEBPACK_IMPORTED_MODULE_5__["default"])(translate, eventBus, bpmnFactory, commandStack, element)); // Adding documentation order field
 
-      documentationTab.entries = documentationTab.entries.concat(Object(_parts_ExtendedDocumentationProps__WEBPACK_IMPORTED_MODULE_6__["default"])(translate, eventBus, bpmnFactory, commandStack, element)); // Adding documentation order field
-
-      documentationTab.entries.push(Object(_parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_5__["default"])(translate, elementRegistry, eventBus, element));
+      documentationTab.entries.push(Object(_parts_DocumentationOrderProps__WEBPACK_IMPORTED_MODULE_4__["default"])(translate, elementRegistry, eventBus, element));
     }
 
     if (self.exportMode) {
@@ -828,111 +823,6 @@ const getCorrectBusinessObject = function (element, isProcessDocumentation) {
 
   return businessObject;
 };
-
-/***/ }),
-
-/***/ "./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js":
-/*!*************************************************************************!*\
-  !*** ./client/bpmn-js-extension/propertiesProvider/wysiwygDecorator.js ***!
-  \*************************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var min_dom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! min-dom */ "./node_modules/min-dom/dist/index.esm.js");
-/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/factory/EntryFactory */ "./node_modules/bpmn-js-properties-panel/lib/factory/EntryFactory.js");
-/* harmony import */ var bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./client/bpmn-js-extension/propertiesProvider/utils.js");
-/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! bpmn-js-properties-panel/lib/helper/CmdHelper */ "./node_modules/bpmn-js-properties-panel/lib/helper/CmdHelper.js");
-/* harmony import */ var bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3__);
-
-
-
-
-
-const wysiwygDecorator = function (translate, eventBus, commandStack, bpmnFactory, entry) {
-  let htmlObject = entry.html;
-
-  if (typeof entry.html === 'string') {
-    htmlObject = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["domify"])(entry.html);
-  }
-
-  let label = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["query"])('label', htmlObject).innerHTML;
-  let modelProperty = Object(min_dom__WEBPACK_IMPORTED_MODULE_0__["query"])('div#camunda-' + entry.id, htmlObject).getAttribute('name');
-
-  let getValue = function (businessObject) {
-    let documentations = businessObject && businessObject.get('documentation'),
-        text = documentations && documentations.length > 0 ? documentations[0].text : '';
-    return {
-      documentation: text
-    };
-  };
-
-  let setValue = function (businessObject, element, values) {
-    let newObjectList = [];
-
-    if (typeof values.documentation !== 'undefined' && values.documentation !== '') {
-      newObjectList.push(bpmnFactory.create('bpmn:Documentation', {
-        text: values.documentation
-      }));
-    }
-
-    return bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_3___default.a.setList(element, businessObject, 'documentation', newObjectList);
-  };
-
-  return bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default.a.textField(translate, {
-    label: label,
-    id: entry.id,
-    modelProperty: modelProperty,
-    buttonLabel: 'Edit',
-    disabled: function () {
-      return true;
-    },
-    buttonAction: {
-      name: 'openRichTextEditor',
-      method: function (element, inputNode) {
-        eventBus.fire('wysiwyg.open', {
-          element: element,
-          node: inputNode,
-          data: entry.get(element).documentation,
-          isProcessDocumentation: entry.id !== modelProperty
-        });
-        eventBus.once('wysiwyg.saveData', 10000, function (event) {
-          const {
-            element,
-            data,
-            isProcessDocumentation
-          } = event;
-          let updateElement = setValue(Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getCorrectBusinessObject"])(element, isProcessDocumentation), element, {
-            documentation: data
-          });
-
-          if (updateElement) {
-            commandStack.execute(updateElement.cmd, updateElement.context);
-          }
-
-          return false;
-        });
-        return true;
-      }
-    },
-    buttonShow: {
-      name: 'showRichTextEditor',
-      method: function () {
-        return true;
-      }
-    },
-    get: function (element) {
-      return getValue(Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getCorrectBusinessObject"])(element, entry.id !== modelProperty));
-    },
-    set: function () {
-      return null;
-    }
-  });
-};
-
-/* harmony default export */ __webpack_exports__["default"] = (wysiwygDecorator);
 
 /***/ }),
 
@@ -1640,6 +1530,10 @@ const exporter = (hierarchy, flowType, canvas, svgImage) => {
     return businessObject.get('documentation').length > 0 ? businessObject.get('documentation')[0].get('text') : '';
   }
 
+  function getElementExtendedDocumentation(businessObject) {
+    return businessObject && businessObject.extendedDocumentation ? businessObject.extendedDocumentation : '';
+  }
+
   function getElementIcon(element) {
     let width = Math.ceil(element.width / 10) * 10;
     let height = Math.ceil(element.height / 10) * 10;
@@ -1654,7 +1548,6 @@ const exporter = (hierarchy, flowType, canvas, svgImage) => {
     const elementId = element.id;
     const elementName = bo.get('name');
     const elementType = bo.$type;
-    const documentation = bo.get('documentation');
 
     if (flowType === _exportUtils__WEBPACK_IMPORTED_MODULE_2__["DIAGRAM_FLOW"] && elementType === 'bpmn:StartEvent') {
       let parentBo = Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["getBusinessObject"])(element.parent);
@@ -1663,14 +1556,14 @@ const exporter = (hierarchy, flowType, canvas, svgImage) => {
 
       if (Object(bpmn_js_lib_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__["is"])(parentBo, 'bpmn:Participant')) {
         docIndexes += `<h2 class="participant"><a href="#${parentId}">${parentName || parentId}</a></h2>`;
-        let docParentText = getElementDocumentation(parentBo); // Getting other documentation from process
+        let docParentText = getElementDocumentation(parentBo) + '<br />' + getElementExtendedDocumentation(parentBo); // Getting other documentation from process
 
-        const processDocumentation = getElementDocumentation(bo.$parent);
-        docParentText += processDocumentation ? `<br>${processDocumentation}` : '';
+        const processDocumentation = getElementDocumentation(bo.$parent) + '<br />' + getElementExtendedDocumentation(bo.$parent);
+        docParentText += processDocumentation.trim() ? `<br>${processDocumentation}` : '';
         docHierarchy += `<div class="documentationElement participant" id="container-${parentId}"><h2><a name="${parentId}"></a><span class="bpmn-icon-participant"></span>&nbsp;${parentName || parentId}</h2>${docParentText}</div>`;
       } else {
         docIndexes += `<h2 class="process"><a href="#${parentId}">${parentName || parentId}</a></h2>`;
-        let docProcessText = getElementDocumentation(parentBo);
+        let docProcessText = getElementDocumentation(parentBo) + '<br />' + getElementExtendedDocumentation(parentBo);
         docHierarchy += `<div class="documentationElement process" id="container-${parentId}"><h2><a name="${parentId}"></a>&nbsp;${parentName || parentId}</h2>${docProcessText}</div>`;
       }
     }
@@ -1678,7 +1571,7 @@ const exporter = (hierarchy, flowType, canvas, svgImage) => {
     const icon = getElementIcon(element);
     const anchorLink = `<a href="#${elementId}">${elementName || elementId}</a><br/>`;
     docIndexes += anchorLink;
-    const docText = documentation.length > 0 ? documentation[0].get('text') : '';
+    const docText = getElementDocumentation(bo) + '<br />' + getElementExtendedDocumentation(bo);
     const anchoredText = `<div class="documentationElement" id="container-${elementId}"><h2><a name="${elementId}"></a>${icon}&nbsp;${elementName || elementId}</h2>${docText}</div>`;
     docHierarchy += anchoredText;
   });
