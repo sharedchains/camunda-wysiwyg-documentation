@@ -17,15 +17,6 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
     return cmdHelper.updateBusinessObject(elem, businessObject, values);
   };
 
-  eventBus.once('wysiwyg.saveData', function(event) {
-    const { element, data, isProcessDocumentation } = event;
-    let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { extendedDocumentation: data });
-    if (updateElement) {
-      commandStack.execute(updateElement.cmd, updateElement.context);
-    }
-    return false;
-  });
-
   entries.push(entryFactory.textField(translate, {
     label: translate('Element extended documentation'),
     id: 'extendedDocumentation',

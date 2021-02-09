@@ -677,22 +677,6 @@ __webpack_require__.r(__webpack_exports__);
     return bpmn_js_properties_panel_lib_helper_CmdHelper__WEBPACK_IMPORTED_MODULE_0___default.a.updateBusinessObject(elem, businessObject, values);
   };
 
-  eventBus.once('wysiwyg.saveData', function (event) {
-    const {
-      element,
-      data,
-      isProcessDocumentation
-    } = event;
-    let updateElement = setValue(Object(_utils__WEBPACK_IMPORTED_MODULE_3__["getCorrectBusinessObject"])(element, isProcessDocumentation), element, {
-      extendedDocumentation: data
-    });
-
-    if (updateElement) {
-      commandStack.execute(updateElement.cmd, updateElement.context);
-    }
-
-    return false;
-  });
   entries.push(bpmn_js_properties_panel_lib_factory_EntryFactory__WEBPACK_IMPORTED_MODULE_1___default.a.textField(translate, {
     label: translate('Element extended documentation'),
     id: 'extendedDocumentation',
@@ -866,7 +850,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react_draft_wysiwyg__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-draft-wysiwyg */ "./node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.js");
 /* harmony import */ var react_draft_wysiwyg__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_draft_wysiwyg__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var react_draft_wysiwyg_dist_react_draft_wysiwyg_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-draft-wysiwyg/dist/react-draft-wysiwyg.css */ "./node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css");
+/* harmony import */ var draft_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! draft-js */ "./node_modules/draft-js/lib/Draft.js");
+/* harmony import */ var draft_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(draft_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var react_draft_wysiwyg_dist_react_draft_wysiwyg_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-draft-wysiwyg/dist/react-draft-wysiwyg.css */ "./node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css");
+
 
 
 
@@ -895,6 +882,27 @@ const documentationEditor = props => {
     });
   }
 
+  function onTab(event, editorState, maxDepth) {
+    const selection = editorState.getSelection();
+    const key = selection.getAnchorKey();
+
+    if (key !== selection.getFocusKey()) {
+      return editorState;
+    }
+
+    const content = editorState.getCurrentContent();
+    const block = content.getBlockForKey(key);
+    const type = block.getType();
+
+    if (type === 'unordered-list-item' && type === 'ordered-list-item') {
+      return draft_js__WEBPACK_IMPORTED_MODULE_2__["RichUtils"].onTab(event, editorState, maxDepth);
+    }
+
+    const tabCharacters = ' '.repeat(maxDepth);
+    let newContentState = draft_js__WEBPACK_IMPORTED_MODULE_2__["Modifier"].replaceText(editorState.getCurrentContent(), editorState.getSelection(), tabCharacters);
+    return draft_js__WEBPACK_IMPORTED_MODULE_2__["EditorState"].push(editorState, newContentState, 'insert-characters');
+  }
+
   return /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react_draft_wysiwyg__WEBPACK_IMPORTED_MODULE_1__["Editor"], {
     editorState: props.editorState,
     wrapperClassName: "docEditor-wrapper",
@@ -911,7 +919,17 @@ const documentationEditor = props => {
           present: true,
           mandatory: false
         }
+      },
+      fontFamily: {
+        options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Courier New', 'Verdana']
       }
+    },
+    onTab: event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const maxDepth = 4;
+      props.onChange(onTab(event, props.editorState, maxDepth));
+      return true;
     }
   }));
 };
@@ -1105,10 +1123,11 @@ class WysiwygFragment extends camunda_modeler_plugin_helpers_react__WEBPACK_IMPO
 
   render() {
     const {
-      modalOpen
+      modalOpen,
+      editorState
     } = this.state;
     return /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0__["Fragment"], null, modalOpen && /*#__PURE__*/camunda_modeler_plugin_helpers_react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_DocumentationModal__WEBPACK_IMPORTED_MODULE_1__["default"], {
-      editorState: this.state.editorState,
+      editorState: editorState,
       onEditorChange: this.onEditorStateChange,
       close: this.closeModal
     }));

@@ -99,11 +99,11 @@ export default class WysiwygFragment extends PureComponent {
   }
 
   render() {
-    const { modalOpen } = this.state;
+    const { modalOpen, editorState } = this.state;
 
     return <Fragment>
       {modalOpen && (
-        <DocumentationModal editorState={this.state.editorState} onEditorChange={this.onEditorStateChange}
+        <DocumentationModal editorState={editorState} onEditorChange={this.onEditorStateChange}
           close={this.closeModal}/>
       )}
     </Fragment>;
