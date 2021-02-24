@@ -21,6 +21,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
   this._eventBus = eventBus;
   this._overlays = overlays;
   this._elementRegistry = elementRegistry;
+  this.overlayIds = {};
   this.exportMode = false;
 
   function updateOverlays() {

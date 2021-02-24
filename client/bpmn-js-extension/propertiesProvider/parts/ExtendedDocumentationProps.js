@@ -4,6 +4,8 @@ import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import { is } from 'bpmn-js/lib/util/ModelUtil';
 import { getCorrectBusinessObject } from '../utils';
 
+import { OPEN_WYSIWYG_EDITOR, SAVE_WYSIWYG_EDITOR } from '../../../utils/EventHelper';
+
 export default function(translate, eventBus, bpmnFactory, commandStack, providerElement) {
   const entries = [];
 
@@ -21,7 +23,7 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
     label: translate('Element extended documentation'),
     id: 'extendedDocumentation',
     modelProperty: 'extendedDocumentation',
-    buttonLabel: 'Edit',
+    buttonLabel: '\u{1F589}',
     disabled: function() {
       return true;
     },
@@ -30,14 +32,14 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
       method: function(elem, inputNode) {
         let bo = getCorrectBusinessObject(elem, false);
 
-        eventBus.fire('wysiwyg.open', {
+        eventBus.fire(OPEN_WYSIWYG_EDITOR, {
           element: elem,
           node: inputNode,
           data: getValue(bo).extendedDocumentation,
           isProcessDocumentation: false
         });
 
-        eventBus.once('wysiwyg.saveData', 10000, function(event) {
+        eventBus.once(SAVE_WYSIWYG_EDITOR, 10000, function(event) {
           const { element, data, isProcessDocumentation } = event;
           let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { extendedDocumentation: data });
           if (updateElement) {
@@ -76,14 +78,14 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
         method: function(elem, inputNode) {
           let bo = getCorrectBusinessObject(elem, true);
 
-          eventBus.fire('wysiwyg.open', {
+          eventBus.fire(OPEN_WYSIWYG_EDITOR, {
             element: elem,
             node: inputNode,
             data: getValue(bo).extendedDocumentation,
             isProcessDocumentation: true
           });
 
-          eventBus.once('wysiwyg.saveData', 10000, function(event) {
+          eventBus.once(SAVE_WYSIWYG_EDITOR, 10000, function(event) {
             const { element, data, isProcessDocumentation } = event;
             let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { extendedDocumentation: data });
             if (updateElement) {

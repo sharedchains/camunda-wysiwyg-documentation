@@ -4,6 +4,7 @@ import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import { getCorrectBusinessObject } from './utils';
 
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
+import { OPEN_WYSIWYG_EDITOR, SAVE_WYSIWYG_EDITOR } from '../../utils/EventHelper';
 
 const wysiwygDecorator = function(translate, eventBus, commandStack, bpmnFactory, entry) {
 
@@ -45,14 +46,14 @@ const wysiwygDecorator = function(translate, eventBus, commandStack, bpmnFactory
     buttonAction: {
       name: 'openRichTextEditor',
       method: function(element, inputNode) {
-        eventBus.fire('wysiwyg.open', {
+        eventBus.fire(OPEN_WYSIWYG_EDITOR, {
           element: element,
           node: inputNode,
           data: entry.get(element).documentation,
           isProcessDocumentation: entry.id !== modelProperty
         });
 
-        eventBus.once('wysiwyg.saveData', 10000, function(event) {
+        eventBus.once(SAVE_WYSIWYG_EDITOR, 10000, function(event) {
           const { element, data, isProcessDocumentation } = event;
           let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { documentation: data });
           if (updateElement) {
