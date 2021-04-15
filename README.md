@@ -8,6 +8,7 @@ A [Camunda Modeler](https://github.com/camunda/camunda-modeler) plug-in based on
 
 This plug-in enables a WYSIWYG text editor for the Documentation field, allowing a user to create HTML presentational documentation embedded inside the bpmn file.
 
+![Screencast documentation editor](./docs/screencast.gif)
 
 ## Development Setup
 

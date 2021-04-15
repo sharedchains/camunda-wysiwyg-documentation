@@ -1,14 +1,35 @@
 import { query, classes } from 'min-dom';
-import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
+import {
+  OPEN_WYSIWYG_EDITOR,
+  SAVE_WYSIWYG_EDITOR,
+  TOGGLE_MODE_EVENT
+} from '../../utils/EventHelper';
 
-var HIGH_PRIORITY = 10001;
+var HIGH_PRIORITY = 10005;
 
-export default function DisableModeling(eventBus, canvas, contextPad, dragging, directEditing, editorActions, modeling, palette) {
+export default function DisableModeling(eventBus, canvas, contextPad, dragging, directEditing, editorActions, modeling, palette, moveCanvas) {
   const self = this;
 
   this._eventBus = eventBus;
   this._canvas = canvas;
   this.modelingDisabled = false;
+  this.editorOpened = false;
+
+  function disable() {
+    directEditing.cancel();
+    contextPad.close();
+    dragging.cancel();
+
+    // hiding palette
+    classes(self.canvasParent).add('exportMode');
+    classes(self.palette).add('hidden');
+
+  }
+
+  function enable() {
+    classes(self.canvasParent).remove('exportMode');
+    classes(self.palette).remove('hidden');
+  }
 
   eventBus.on('import.done', function() {
     self.canvasParent = self._canvas.getContainer().parentNode;
@@ -19,20 +40,27 @@ export default function DisableModeling(eventBus, canvas, contextPad, dragging, 
     self.modelingDisabled = context.exportMode;
 
     if (self.modelingDisabled) {
-      directEditing.cancel();
-      contextPad.close();
-      dragging.cancel();
-
-      // hiding palette
-      classes(self.canvasParent).add('exportMode');
-      classes(self.palette).add('hidden');
+      disable();
     } else {
 
       // showing palette again
-      classes(self.canvasParent).remove('exportMode');
-      classes(self.palette).remove('hidden');
+      enable();
     }
 
+    palette._update();
+  });
+
+  eventBus.on(OPEN_WYSIWYG_EDITOR, HIGH_PRIORITY, function() {
+    self.editorOpened = true;
+    self.modelingDisabled = true;
+    disable();
+    palette._update();
+  });
+
+  eventBus.on(SAVE_WYSIWYG_EDITOR, HIGH_PRIORITY, function() {
+    self.editorOpened = false;
+    self.modelingDisabled = false;
+    enable();
     palette._update();
   });
 
@@ -41,6 +69,16 @@ export default function DisableModeling(eventBus, canvas, contextPad, dragging, 
     obj[fnName] = function() {
       return cb.call(this, fn, arguments);
     };
+  }
+
+  function ignoreIfModelingDisabledAndEditorIsOpen(obj, fnName) {
+    intercept(obj, fnName, function(fn, args) {
+      if (self.modelingDisabled && self.editorOpened) {
+        return true;
+      }
+
+      return fn.apply(this, args);
+    });
   }
 
   function ignoreIfModelingDisabled(obj, fnName) {
@@ -64,14 +102,12 @@ export default function DisableModeling(eventBus, canvas, contextPad, dragging, 
   }
 
   ignoreIfModelingDisabled(contextPad, 'open');
-
   ignoreIfModelingDisabled(dragging, 'init');
-
   ignoreIfModelingDisabled(directEditing, 'activate');
 
-  ignoreIfModelingDisabled(dragging, 'init');
-
-  ignoreIfModelingDisabled(directEditing, 'activate');
+  ignoreIfModelingDisabledAndEditorIsOpen(moveCanvas, 'handleStart');
+  ignoreIfModelingDisabledAndEditorIsOpen(moveCanvas, 'handleMove');
+  ignoreIfModelingDisabledAndEditorIsOpen(moveCanvas, 'handleEnd');
 
   throwIfModelingDisabled(modeling, 'moveShape');
   throwIfModelingDisabled(modeling, 'updateAttachment');
@@ -110,9 +146,19 @@ export default function DisableModeling(eventBus, canvas, contextPad, dragging, 
       'globalConnectTool',
       'distributeElements',
       'alignElements',
-      'directEditing',
+      'directEditing'
     ], action)) {
       return;
+    }
+
+    if (self.modelingDisabled && self.editorOpened && isAnyAction([
+      'activateHandtool',
+      'toggleTokenSimulation',
+      'resetTokenSimulation',
+      'toggleTokenSimulationLog',
+      'togglePauseTokenSimulation'
+    ], action)) {
+      return false;
     }
 
     return fn.apply(this, args);
@@ -127,7 +173,8 @@ DisableModeling.$inject = [
   'directEditing',
   'editorActions',
   'modeling',
-  'palette'
+  'palette',
+  'moveCanvas'
 ];
 
 // helpers //////////

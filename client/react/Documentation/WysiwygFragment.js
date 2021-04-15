@@ -1,10 +1,12 @@
-import React, { Fragment, PureComponent } from 'camunda-modeler-plugin-helpers/react';
+import React, { Fragment, Component } from 'camunda-modeler-plugin-helpers/react';
 
-import DocumentationModal from './DocumentationModal';
+import EditorModal from '../UI/EditorModal';
 
 import { EditorState, ContentState, convertToRaw } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
+
+import { OPEN_WYSIWYG_EDITOR, SAVE_WYSIWYG_EDITOR } from '../../utils/EventHelper';
 
 const defaultState = {
   modalOpen: false,
@@ -13,7 +15,7 @@ const defaultState = {
   editorState: EditorState.createEmpty()
 };
 
-export default class WysiwygFragment extends PureComponent {
+export default class WysiwygFragment extends Component {
 
   constructor(props) {
     super(props);
@@ -56,9 +58,9 @@ export default class WysiwygFragment extends PureComponent {
 
     subscribe('bpmn.modeler.created', ({ modeler }) => {
       this._eventBus = modeler.get('eventBus');
-      this._eventBus.on('wysiwyg.open', (event) => {
+      this._eventBus.on(OPEN_WYSIWYG_EDITOR, (event) => {
 
-        // Received command to open the modal for documentation
+        // Received command to open the editorModal for documentation
         let editorState = EditorState.createEmpty();
         if (event.data) {
           const { contentBlocks, entityMap } = htmlToDraft(event.data);
@@ -89,7 +91,7 @@ export default class WysiwygFragment extends PureComponent {
       data = draftToHtml(convertToRaw(editorState.getCurrentContent()));
       data = data.replace(/(\r\n|\n|\r)/gm, '');
     }
-    this._eventBus.fire('wysiwyg.saveData', { element, node, isProcessDocumentation, data: data });
+    this._eventBus.fire(SAVE_WYSIWYG_EDITOR, { element, node, isProcessDocumentation, data: data });
   }
 
   onEditorStateChange(editorState) {
@@ -99,12 +101,12 @@ export default class WysiwygFragment extends PureComponent {
   }
 
   render() {
-    const { modalOpen } = this.state;
+    const { modalOpen, editorState } = this.state;
 
     return <Fragment>
       {modalOpen && (
-        <DocumentationModal editorState={this.state.editorState} onEditorChange={this.onEditorStateChange}
-          close={this.closeModal}/>
+        <EditorModal editorState={editorState} onEditorChange={this.onEditorStateChange}
+          close={this.closeModal} title='Documentation'/>
       )}
     </Fragment>;
   }

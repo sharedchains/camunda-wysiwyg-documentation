@@ -16,7 +16,7 @@ export default function(translate, elementRegistry, eventBus, element) {
       if (newValue) {
 
         if (!/^(\d+\.)*(\d+)$/.test(newValue)) {
-          return { 'order': 'Value must be a number, optionally splitted by dots' };
+          return { 'order': 'Value must be a number, optionally split by dots' };
         }
         if (!utils.notExistsDocOrder(el.id, newValue)) {
           return { 'order': 'Value already exists' };

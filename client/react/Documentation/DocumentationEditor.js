@@ -1,6 +1,7 @@
 import React from 'camunda-modeler-plugin-helpers/react';
 
 import { Editor } from 'react-draft-wysiwyg';
+import { EditorState, RichUtils, Modifier } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 const documentationEditor = (props) => {
@@ -29,6 +30,31 @@ const documentationEditor = (props) => {
       });
   }
 
+  function onTab(event, editorState, maxDepth) {
+    const selection = editorState.getSelection();
+    const key = selection.getAnchorKey();
+
+    if (key !== selection.getFocusKey()) {
+      return editorState;
+    }
+
+    const content = editorState.getCurrentContent();
+    const block = content.getBlockForKey(key);
+    const type = block.getType();
+
+    if (type === 'unordered-list-item' && type === 'ordered-list-item') {
+      return RichUtils.onTab(event, editorState, maxDepth);
+    }
+
+    const tabCharacters = ' '.repeat(maxDepth);
+    let newContentState = Modifier.replaceText(
+      editorState.getCurrentContent(),
+      editorState.getSelection(),
+      tabCharacters
+    );
+    return EditorState.push(editorState, newContentState, 'insert-characters');
+  }
+
   return (<div>
     <Editor
       editorState={props.editorState}
@@ -44,6 +70,17 @@ const documentationEditor = (props) => {
           uploadCallback: uploadImageCallBack,
           alt: { present: true, mandatory: false },
         },
+        fontFamily: {
+          options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Courier New', 'Verdana']
+        }
+      }}
+      onTab={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const maxDepth = 4;
+        props.onChange(onTab(event, props.editorState, maxDepth));
+        return true;
       }}
     />
   </div>);

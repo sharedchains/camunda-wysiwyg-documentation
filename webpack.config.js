@@ -28,6 +28,10 @@ module.exports = {
   resolve: {
     alias: {
       react: 'camunda-modeler-plugin-helpers/react'
+    },
+    fallback: {
+      'util': false,
+      'assert': false
     }
   },
   devtool: 'cheap-module-source-map'

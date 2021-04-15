@@ -8,11 +8,16 @@
   "associations": [],
   "types": [
     {
-      "name": "DocumentationOrder",
+      "name": "ExtendedDocumentation",
       "extends": [
-        "bpmn:FlowNode"
+        "bpmn:BaseElement"
       ],
       "properties": [
+        {
+          "name": "extendedDocumentation",
+          "type": "String",
+          "isAttr": true
+        },
         {
           "name": "order",
           "isAttr": true,

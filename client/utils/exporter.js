@@ -16,6 +16,10 @@ const exporter = (hierarchy, flowType, canvas, svgImage) => {
     return businessObject.get('documentation').length > 0 ? businessObject.get('documentation')[0].get('text') : '';
   }
 
+  function getElementExtendedDocumentation(businessObject) {
+    return businessObject && businessObject.extendedDocumentation ? businessObject.extendedDocumentation : '';
+  }
+
   function getElementIcon(element) {
     let width = Math.ceil(element.width / 10) * 10;
     let height = Math.ceil(element.height / 10) * 10;
@@ -30,7 +34,6 @@ const exporter = (hierarchy, flowType, canvas, svgImage) => {
     const elementId = element.id;
     const elementName = bo.get('name');
     const elementType = bo.$type;
-    const documentation = bo.get('documentation');
 
     if (flowType === DIAGRAM_FLOW && elementType === 'bpmn:StartEvent') {
       let parentBo = getBusinessObject(element.parent);
@@ -40,22 +43,22 @@ const exporter = (hierarchy, flowType, canvas, svgImage) => {
       // Check if it's a collaboration or something else, to add other markup
       if (is(parentBo, 'bpmn:Participant')) {
         docIndexes += `<h2 class="participant"><a href="#${parentId}">${parentName || parentId}</a></h2>`;
-        let docParentText = getElementDocumentation(parentBo);
+        let docParentText = getElementDocumentation(parentBo) + '<br />' + getElementExtendedDocumentation(parentBo);
 
         // Getting other documentation from process
-        const processDocumentation = getElementDocumentation(bo.$parent);
-        docParentText += processDocumentation ? `<br>${processDocumentation}` : '';
+        const processDocumentation = getElementDocumentation(bo.$parent) + '<br />' + getElementExtendedDocumentation(bo.$parent);
+        docParentText += processDocumentation.trim() ? `<br>${processDocumentation}` : '';
         docHierarchy += `<div class="documentationElement participant" id="container-${parentId}"><h2><a name="${parentId}"></a><span class="bpmn-icon-participant"></span>&nbsp;${parentName || parentId}</h2>${docParentText}</div>`;
       } else {
         docIndexes += `<h2 class="process"><a href="#${parentId}">${parentName || parentId}</a></h2>`;
-        let docProcessText = getElementDocumentation(parentBo);
+        let docProcessText = getElementDocumentation(parentBo) + '<br />' + getElementExtendedDocumentation(parentBo);
         docHierarchy += `<div class="documentationElement process" id="container-${parentId}"><h2><a name="${parentId}"></a>&nbsp;${parentName || parentId}</h2>${docProcessText}</div>`;
       }
     }
     const icon = getElementIcon(element);
     const anchorLink = `<a href="#${elementId}">${elementName || elementId}</a><br/>`;
     docIndexes += anchorLink;
-    const docText = documentation.length > 0 ? documentation[0].get('text') : '';
+    const docText = getElementDocumentation(bo) + '<br />' + getElementExtendedDocumentation(bo);
     const anchoredText = `<div class="documentationElement" id="container-${elementId}"><h2><a name="${elementId}"></a>${icon}&nbsp;${elementName || elementId}</h2>${docText}</div>`;
     docHierarchy += anchoredText;
   });
