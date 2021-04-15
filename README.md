@@ -1,4 +1,4 @@
-# Camunda Modeler Plugin Example
+# WYSIWYG Documentation editor for Camunda Modeler
 
 [![Compatible with Camunda Modeler version 3.4](https://img.shields.io/badge/Camunda%20Modeler-3.4+-blue.svg)](https://github.com/camunda/camunda-modeler)
 
