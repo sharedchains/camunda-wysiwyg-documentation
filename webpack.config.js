@@ -1,4 +1,6 @@
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
+const ZipPlugin = require('zip-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -34,5 +36,29 @@ module.exports = {
       'assert': false
     }
   },
-  devtool: 'cheap-module-source-map'
+  devtool: 'cheap-module-source-map',
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, './style/style.css'),
+          to: path.resolve(__dirname, './dist/')
+        },
+        {
+          from: path.resolve(__dirname, './index.prod.js'),
+          to: path.resolve(__dirname, './dist/index.js')
+        }
+      ]
+    }),
+    new ZipPlugin({
+      filename: 'camunda-wysiwyg-documentation-plugin-' + process.env.npm_package_version + '.zip',
+      pathPrefix: 'camunda-wysiwyg-documentation/',
+      pathMapper: function(assetPath) {
+        if (assetPath.startsWith('client') || assetPath.startsWith('style')) {
+          return path.join(path.dirname(assetPath), 'client', path.basename(assetPath));
+        }
+        return assetPath;
+      }
+    })
+  ]
 };
