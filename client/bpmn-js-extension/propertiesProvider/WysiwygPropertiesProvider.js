@@ -9,6 +9,18 @@ import extendedDocumentationProps from './parts/ExtendedDocumentationProps';
 
 const MEDIUM_PRIORITY = 5000;
 
+/**
+ * Our custom provider, which integrates the extended documentation property field and overrides properties in 'export mode'
+ *
+ * @param eventBus
+ * @param commandStack
+ * @param bpmnFactory
+ * @param translate
+ * @param selection
+ * @param propertiesProvider
+ * @param elementRegistry
+ * @constructor
+ */
 export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider, elementRegistry) {
   PropertiesActivator.call(this, eventBus);
 

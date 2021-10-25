@@ -4,6 +4,11 @@ import { Editor } from 'react-draft-wysiwyg';
 import { EditorState, RichUtils, Modifier } from 'draft-js';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
+/**
+ * Functional component to implement the wysiwyg editor
+ * @param props
+ * @returns {JSX.Element}
+ */
 const documentationEditor = (props) => {
 
   function uploadImageCallBack(file) {
@@ -12,7 +17,6 @@ const documentationEditor = (props) => {
         const reader = new FileReader();
         let img = new Image();
 
-        // let url = ''
         reader.onload = function(e) {
           img.src = reader.result;
           resolve({

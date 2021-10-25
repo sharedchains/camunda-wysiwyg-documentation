@@ -15,6 +15,9 @@ const defaultState = {
   editorState: EditorState.createEmpty()
 };
 
+/**
+ * React component to implement the documentation modal
+ */
 export default class WysiwygFragment extends Component {
 
   constructor(props) {

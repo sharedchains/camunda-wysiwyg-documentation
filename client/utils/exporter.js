@@ -1,12 +1,16 @@
 import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import { query } from 'min-dom';
 
-import { DIAGRAM_FLOW } from './exportUtils';
+import { DIAGRAM_FLOW } from './ExportUtils';
 
-/*
-* Expecting a hierarchy array already sorted in the order we want the documentation to be exported.
-* Each element of the array is an object node from bpmn-js
-* */
+/**
+ * Exporter function
+ * @param hierarchy array already sorted in the order we want to export documentation. Each element of the array is an object node from bpmn-js
+ * @param flowType type of documentation export flow
+ * @param canvas bpmn-js canvas container
+ * @param svgImage bpmn svg image
+ * @returns {{export: (function(): string)}}
+ */
 const exporter = (hierarchy, flowType, canvas, svgImage) => {
   let docIndexes = '<div class="documentationIndexes"><h1>INDEXES</h1>';
   let docHierarchy = '<div class="documentationContainer"><h1>ELEMENTS</h1>';

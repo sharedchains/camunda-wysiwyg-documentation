@@ -10,11 +10,19 @@ import {
   UNSET_DOCUMENTATION_ORDER_EVENT,
   UPDATE_ELEMENT_EVENT
 } from '../../utils/EventHelper';
-import exportUtils from '../../utils/exportUtils';
+import ExportUtils from '../../utils/ExportUtils';
 
 const OFFSET_BOTTOM = 10,
       OFFSET_RIGHT = 15;
 
+/**
+ * Implementing documentation overlays to show element export order count in 'export mode'
+ * @param eventBus
+ * @param overlays
+ * @param commandStack
+ * @param elementRegistry
+ * @constructor
+ */
 export default function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry) {
   const self = this;
 
@@ -28,7 +36,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
     self.overlayIds = {};
     self.counter = 1;
 
-    let utils = new exportUtils(self._elementRegistry);
+    let utils = new ExportUtils(self._elementRegistry);
     let allNodes = utils.getAllElementsWithDocumentationOrder();
 
     allNodes.forEach((element) => {
@@ -70,7 +78,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
   }
 
   function getNextDocOrder(counter) {
-    let utils = new exportUtils(self._elementRegistry);
+    let utils = new ExportUtils(self._elementRegistry);
     if (!utils.notExistsDocOrder(undefined, counter)) {
       return getNextDocOrder(counter + 1);
     }

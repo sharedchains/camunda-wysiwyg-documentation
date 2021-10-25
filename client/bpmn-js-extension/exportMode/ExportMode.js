@@ -4,8 +4,14 @@ import {
   UNSET_DOCUMENTATION_ORDER_EVENT
 } from '../../utils/EventHelper';
 
-var HIGH_PRIORITY = 10001;
+const HIGH_PRIORITY = 10001;
 
+/**
+ * Implementing 'export mode', adding functionalities to mouse select on elements
+ *
+ * @param eventBus
+ * @constructor
+ */
 export default function ExportMode(eventBus) {
   const self = this;
 

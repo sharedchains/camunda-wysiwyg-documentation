@@ -6,6 +6,15 @@ import { getCorrectBusinessObject } from './utils';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 import { OPEN_WYSIWYG_EDITOR, SAVE_WYSIWYG_EDITOR } from '../../utils/EventHelper';
 
+/**
+ * Field decorator function for the existing documentation entries
+ * @param translate
+ * @param eventBus
+ * @param commandStack
+ * @param bpmnFactory
+ * @param entry
+ * @returns {*}
+ */
 const wysiwygDecorator = function(translate, eventBus, commandStack, bpmnFactory, entry) {
 
   let htmlObject = entry.html;

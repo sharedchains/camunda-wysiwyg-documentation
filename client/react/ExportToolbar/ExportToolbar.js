@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { find } from 'lodash';
 
 import exporter from '../../utils/exporter';
-import exportUtils, { DIAGRAM_FLOW, DOCUMENTATION_ORDER_FLOW } from '../../utils/exportUtils';
+import ExportUtils, { DIAGRAM_FLOW, DOCUMENTATION_ORDER_FLOW } from '../../utils/ExportUtils';
 
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
 
@@ -15,6 +15,9 @@ const defaultState = {
   exportMode: false
 };
 
+/**
+ * New export toolbar for Camunda Modeler default toolbar
+ */
 class ExportToolbar extends Component {
   constructor(props) {
     super(props);
@@ -67,7 +70,7 @@ class ExportToolbar extends Component {
     const canvas = modeler.get('canvas');
 
     // Ottengo tutti gli elementi che presentano documentazione
-    let utils = new exportUtils(elementRegistry);
+    let utils = new ExportUtils(elementRegistry);
     let elementsToExport = [];
 
     switch (flowType) {

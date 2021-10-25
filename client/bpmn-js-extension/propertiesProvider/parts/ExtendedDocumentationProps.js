@@ -6,6 +6,15 @@ import { getCorrectBusinessObject } from '../utils';
 
 import { OPEN_WYSIWYG_EDITOR, SAVE_WYSIWYG_EDITOR } from '../../../utils/EventHelper';
 
+/**
+ * Returns the extended documentation property field which opens the new documentation wysiwyg modal
+ * @param translate
+ * @param eventBus
+ * @param bpmnFactory
+ * @param commandStack
+ * @param providerElement
+ * @returns {*[]}
+ */
 export default function(translate, eventBus, bpmnFactory, commandStack, providerElement) {
   const entries = [];
 
@@ -32,13 +41,6 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
       method: function(elem, inputNode) {
         let bo = getCorrectBusinessObject(elem, false);
 
-        eventBus.fire(OPEN_WYSIWYG_EDITOR, {
-          element: elem,
-          node: inputNode,
-          data: getValue(bo).extendedDocumentation,
-          isProcessDocumentation: false
-        });
-
         eventBus.once(SAVE_WYSIWYG_EDITOR, 10000, function(event) {
           const { element, data, isProcessDocumentation } = event;
           let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { extendedDocumentation: data });
@@ -46,6 +48,13 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
             commandStack.execute(updateElement.cmd, updateElement.context);
           }
           return false;
+        });
+
+        eventBus.fire(OPEN_WYSIWYG_EDITOR, {
+          element: elem,
+          node: inputNode,
+          data: getValue(bo).extendedDocumentation,
+          isProcessDocumentation: false
         });
 
         return true;
@@ -69,7 +78,7 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
       label: translate('Process extended documentation'),
       id: 'process-extendedDocumentation',
       modelProperty: 'extendedDocumentation',
-      buttonLabel: 'Edit',
+      buttonLabel: '\u{1F589}',
       disabled: function() {
         return true;
       },
@@ -78,13 +87,6 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
         method: function(elem, inputNode) {
           let bo = getCorrectBusinessObject(elem, true);
 
-          eventBus.fire(OPEN_WYSIWYG_EDITOR, {
-            element: elem,
-            node: inputNode,
-            data: getValue(bo).extendedDocumentation,
-            isProcessDocumentation: true
-          });
-
           eventBus.once(SAVE_WYSIWYG_EDITOR, 10000, function(event) {
             const { element, data, isProcessDocumentation } = event;
             let updateElement = setValue(getCorrectBusinessObject(element, isProcessDocumentation), element, { extendedDocumentation: data });
@@ -92,6 +94,13 @@ export default function(translate, eventBus, bpmnFactory, commandStack, provider
               commandStack.execute(updateElement.cmd, updateElement.context);
             }
             return false;
+          });
+
+          eventBus.fire(OPEN_WYSIWYG_EDITOR, {
+            element: elem,
+            node: inputNode,
+            data: getValue(bo).extendedDocumentation,
+            isProcessDocumentation: true
           });
 
           return true;
