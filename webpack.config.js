@@ -1,6 +1,7 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const ZipPlugin = require('zip-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   mode: 'development',
@@ -38,15 +39,23 @@ module.exports = {
   },
   devtool: 'cheap-module-source-map',
   plugins: [
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery'
+    }),
     new CopyPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, './style/style.css'),
-          to: path.resolve(__dirname, './dist/')
+          from: path.resolve(__dirname, './node_modules/bpmn-js-documentation-viewer/assets/css/docViewer.css'),
+          to: path.resolve(__dirname, './style/')
         },
         {
           from: path.resolve(__dirname, './index.prod.js'),
           to: path.resolve(__dirname, './dist/index.js')
+        },
+        {
+          from: path.resolve(__dirname, './style/'),
+          to: path.resolve(__dirname, './dist/')
         }
       ]
     }),

@@ -1,0 +1,89 @@
+.doc-overlay {
+    background-color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 9px;
+    border-bottom: 12px solid transparent;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid transparent;
+
+    z-index: 100;
+}
+
+.doc-overlay.full {
+    background-color: #00ffff;
+}
+
+.doc-overlay::after {
+    content: "\1F5CE";
+    color: #000;
+    background: none;
+    display: block;
+    margin: -15px 0 0 -7px;
+    font-size: 20px;
+    position: absolute;
+}
+
+.doc-modal {
+    height: 80vh;
+    width: 50vw;
+    border: 2px solid black;
+    border-radius: 5%;
+    margin-left: 150px;
+    margin-top: 50px;
+    background: white;
+
+    z-index: 1000;
+}
+
+.doc-modal > .doc-modal-content {
+    height: 90%;
+    width: 100%;
+    display: block;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 20px;
+    word-break: break-word;
+
+    overflow: auto;
+}
+
+.doc-modal > .doc-modal-footer {
+    height: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.doc-modal > .doc-modal-footer > button {
+    margin-right: 20px;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+#myModal .modal-dialog {
+    max-width: none !important;
+}
+
+.react-modal {
+    width: 90vw;
+}
