@@ -47,7 +47,7 @@ module.exports = {
       patterns: [
         {
           from: path.resolve(__dirname, './node_modules/bpmn-js-documentation-viewer/assets/css/docViewer.css'),
-          to: path.resolve(__dirname, './style/')
+          to: path.resolve(__dirname, './dist/')
         },
         {
           from: path.resolve(__dirname, './index.prod.js'),
@@ -63,8 +63,13 @@ module.exports = {
       filename: 'camunda-wysiwyg-documentation-plugin-' + process.env.npm_package_version + '.zip',
       pathPrefix: 'camunda-wysiwyg-documentation/',
       pathMapper: function(assetPath) {
-        if (assetPath.startsWith('client') || assetPath.startsWith('style')) {
+        console.log('assetPath >>>>>' + assetPath);
+        
+        if (assetPath.startsWith('client')) {
           return path.join(path.dirname(assetPath), 'client', path.basename(assetPath));
+        }
+        else if (assetPath.endsWith('.css')) {
+          return path.join(path.dirname(assetPath), 'style', path.basename(assetPath));
         }
         return assetPath;
       }
