@@ -63,8 +63,6 @@ module.exports = {
       filename: 'camunda-wysiwyg-documentation-plugin-' + process.env.npm_package_version + '.zip',
       pathPrefix: 'camunda-wysiwyg-documentation/',
       pathMapper: function(assetPath) {
-        console.log('assetPath >>>>>' + assetPath);
-        
         if (assetPath.startsWith('client')) {
           return path.join(path.dirname(assetPath), 'client', path.basename(assetPath));
         }
