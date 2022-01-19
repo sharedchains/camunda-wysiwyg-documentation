@@ -45,7 +45,7 @@ class ExportToolbar extends Component {
       const { tabModeler } = this.state;
       this.setState({
         modeler: modeler,
-        tabModeler: [...tabModeler, { tabId: tab.id, modeler: modeler, exportMode: false }],
+        tabModeler: [ ...tabModeler, { tabId: tab.id, modeler: modeler, exportMode: false } ],
         tabId: tab.id
       });
     });
@@ -107,7 +107,7 @@ class ExportToolbar extends Component {
         let savePath = await config.backend.send('dialog:save-file', {
           title: 'Export Documentation',
           saveAs: true,
-          filters: [{ name: 'HTML', extensions: ['html'] }],
+          filters: [ { name: 'HTML', extensions: [ 'html' ] } ],
           file: file
         });
 
@@ -160,7 +160,7 @@ class ExportToolbar extends Component {
       });
       return {
         exportMode: exportMode,
-        tabModeler: [...tabModeler, { modeler: activeTab.modeler, tabId: tabId, exportMode: exportMode }]
+        tabModeler: [ ...tabModeler, { modeler: activeTab.modeler, tabId: tabId, exportMode: exportMode } ]
       };
     });
   };

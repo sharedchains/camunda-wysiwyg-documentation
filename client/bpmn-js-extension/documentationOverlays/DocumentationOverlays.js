@@ -163,7 +163,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
       const toUpdate = sortBy(filter(self.overlayIds, (overlay) => {
         let split = overlay.order.split('.');
         return +split[0] >= removedCounter;
-      }), ['order']);
+      }), [ 'order' ]);
       toUpdate.forEach((overlayIdObject) => {
         let updateBo = getBusinessObject(overlayIdObject.element);
 
@@ -184,4 +184,4 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
   });
 }
 
-DocumentationOverlays.$inject = ['eventBus', 'overlays', 'commandStack', 'elementRegistry'];
+DocumentationOverlays.$inject = [ 'eventBus', 'overlays', 'commandStack', 'elementRegistry' ];

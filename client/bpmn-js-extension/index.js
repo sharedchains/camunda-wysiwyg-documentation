@@ -8,9 +8,9 @@ import DocumentationOverlays from './documentationOverlays/DocumentationOverlays
  *
  */
 export default {
-  __init__: ['WysiwygPropertiesProvider', 'DisableModelingDoc', 'ExportMode', 'DocumentationOverlays'],
-  WysiwygPropertiesProvider: ['type', WysiwygPropertiesProvider],
-  DisableModelingDoc: ['type', DisableModelingDoc],
-  ExportMode: ['type', ExportMode],
-  DocumentationOverlays: ['type', DocumentationOverlays]
+  __init__: [ 'WysiwygPropertiesProvider', 'DisableModelingDoc', 'ExportMode', 'DocumentationOverlays' ],
+  WysiwygPropertiesProvider: [ 'type', WysiwygPropertiesProvider ],
+  DisableModelingDoc: [ 'type', DisableModelingDoc ],
+  ExportMode: [ 'type', ExportMode ],
+  DocumentationOverlays: [ 'type', DocumentationOverlays ]
 };

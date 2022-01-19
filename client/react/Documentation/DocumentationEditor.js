@@ -75,7 +75,7 @@ const documentationEditor = (props) => {
           alt: { present: true, mandatory: false },
         },
         fontFamily: {
-          options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Courier New', 'Verdana']
+          options: [ 'Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Courier New', 'Verdana' ]
         }
       }}
       onTab={(event) => {

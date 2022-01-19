@@ -21,17 +21,17 @@ class ExportUtils {
     return orderBy(this._elementRegistry.filter((element) =>
       is(element, 'bpmn:StartEvent') &&
       element.type !== 'label' &&
-      !is(element.parent, 'bpmn:SubProcess')), ['y', 'x'], ['asc', 'asc']);
+      !is(element.parent, 'bpmn:SubProcess')), [ 'y', 'x' ], [ 'asc', 'asc' ]);
   };
 
   getAllElementsWithDocumentationOrder = () => {
     let elements = this._elementRegistry.filter(
       (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element)
     );
-    return orderBy(elements,[function(element) {
+    return orderBy(elements,[ function(element) {
       let bo = getBusinessObject(element);
       return bo.get('order');
-    }], ['asc']);
+    } ], [ 'asc' ]);
   };
 
   notExistsDocOrder = (id, newDocOrder) => {

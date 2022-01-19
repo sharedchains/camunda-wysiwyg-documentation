@@ -47,8 +47,8 @@ export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFa
       documentationTab.entries.push(documentationOrderProps(translate, elementRegistry, eventBus, element));
     }
     if (self.exportMode) {
-      generalTab.groups = [documentationTab];
-      return [generalTab];
+      generalTab.groups = [ documentationTab ];
+      return [ generalTab ];
     }
     return array;
   };
@@ -56,4 +56,4 @@ export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFa
 
 inherits(WysiwygPropertiesProvider, PropertiesActivator);
 
-WysiwygPropertiesProvider.$inject = ['eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider', 'elementRegistry'];
+WysiwygPropertiesProvider.$inject = [ 'eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider', 'elementRegistry' ];
