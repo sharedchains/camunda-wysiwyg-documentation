@@ -2,7 +2,10 @@ import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 
 import { orderBy } from 'lodash';
 
-class exportUtils {
+/**
+ * Utility class to get documentation from the element, in the right order
+ */
+class ExportUtils {
 
   constructor(elementRegistry) {
     this._elementRegistry = elementRegistry;
@@ -18,17 +21,17 @@ class exportUtils {
     return orderBy(this._elementRegistry.filter((element) =>
       is(element, 'bpmn:StartEvent') &&
       element.type !== 'label' &&
-      !is(element.parent, 'bpmn:SubProcess')), ['y', 'x'], ['asc', 'asc']);
+      !is(element.parent, 'bpmn:SubProcess')), [ 'y', 'x' ], [ 'asc', 'asc' ]);
   };
 
   getAllElementsWithDocumentationOrder = () => {
     let elements = this._elementRegistry.filter(
       (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element)
     );
-    return orderBy(elements,[function(element) {
+    return orderBy(elements,[ function(element) {
       let bo = getBusinessObject(element);
       return bo.get('order');
-    }], ['asc']);
+    } ], [ 'asc' ]);
   };
 
   notExistsDocOrder = (id, newDocOrder) => {
@@ -44,6 +47,11 @@ class exportUtils {
     });
   };
 
+  /**
+   * Navigates the process tree using dfs algorithm, returning the array of visited elements
+   * @param startEvent
+   * @returns {*[]}
+   */
   navigateFromStartEvent = (startEvent) => {
     if (!startEvent) {
       return [];
@@ -85,7 +93,7 @@ class exportUtils {
   };
 }
 
-export default exportUtils;
+export default ExportUtils;
 
 export const DIAGRAM_FLOW = 'DIAGRAM_FLOW';
 export const DOCUMENTATION_ORDER_FLOW = 'DOCUMENTATION_ORDER_FLOW';

@@ -1,3 +1,13 @@
+/**
+ * Disable modeling while opening documentation editor
+ */
+
+/**
+ * @license
+ * Copyright 2017 bpmn.io
+ * SPDX-License-Identifier: MIT
+ */
+
 import { query, classes } from 'min-dom';
 import {
   OPEN_WYSIWYG_EDITOR,
@@ -5,8 +15,9 @@ import {
   TOGGLE_MODE_EVENT
 } from '../../utils/EventHelper';
 
-var HIGH_PRIORITY = 10005;
+const HIGH_PRIORITY = 10005;
 
+/* TODO: reduce parameters using injector.get(#name, false); */
 export default function DisableModeling(eventBus, canvas, contextPad, dragging, directEditing, editorActions, modeling, palette, moveCanvas) {
   const self = this;
 

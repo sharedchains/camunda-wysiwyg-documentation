@@ -12,9 +12,14 @@ const defaultState = {
   modalOpen: false,
   element: null,
   node: null,
-  editorState: EditorState.createEmpty()
+  editorState: EditorState.createEmpty(),
+  modeler: null,
+  tabModeler: []
 };
 
+/**
+ * React component to implement the documentation modal
+ */
 export default class WysiwygFragment extends Component {
 
   constructor(props) {
@@ -56,8 +61,17 @@ export default class WysiwygFragment extends Component {
       }
     };
 
-    subscribe('bpmn.modeler.created', ({ modeler }) => {
+    subscribe('bpmn.modeler.created', ({ modeler, tab }) => {
       this._eventBus = modeler.get('eventBus');
+
+      const { tabModeler }
+        = this.state;
+      this.setState({
+        modeler: modeler,
+        tabModeler: [ ...tabModeler, { tabId: tab.id, modeler: modeler } ]
+      });
+
+
       this._eventBus.on(OPEN_WYSIWYG_EDITOR, (event) => {
 
         // Received command to open the editorModal for documentation
@@ -76,22 +90,38 @@ export default class WysiwygFragment extends Component {
       });
     });
 
-    subscribe('app.activeTabChanged', saveTab);
+    subscribe('app.activeTabChanged', tab => {
+      const {
+        tabModeler
+      } = this.state;
+      let activeTabId = tab.activeTab.id;
+
+      const activeModeler = find(tabModeler, { tabId: activeTabId });
+      if (activeModeler) {
+        this._eventBus = activeModeler.modeler.get('eventBus');
+        this.setState({ modeler: activeModeler.modeler });
+      }
+
+      saveTab(tab);
+    });
+
     subscribe('close-all-tabs', saveTab);
   }
 
   closeModal() {
     let currentState = { ...this.state };
-    const { element, node, isProcessDocumentation, editorState } = currentState;
-    this.setState({
-      ...defaultState
-    });
+    const { element, node, isProcessDocumentation, editorState, modeler, tabModeler } = currentState;
+
     let data = null;
     if (editorState.getCurrentContent().hasText()) {
       data = draftToHtml(convertToRaw(editorState.getCurrentContent()));
       data = data.replace(/(\r\n|\n|\r)/gm, '');
     }
     this._eventBus.fire(SAVE_WYSIWYG_EDITOR, { element, node, isProcessDocumentation, data: data });
+
+    this.setState({
+      ...defaultState, modeler, tabModeler
+    });
   }
 
   onEditorStateChange(editorState) {

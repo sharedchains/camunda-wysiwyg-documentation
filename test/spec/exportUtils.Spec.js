@@ -1,4 +1,4 @@
-import exportUtils from '../../client/utils/exportUtils';
+import ExportUtils from '../../client/utils/ExportUtils';
 
 import Modeler from 'bpmn-js/lib/Modeler';
 
@@ -9,7 +9,7 @@ import {
 
 describe('Test element navigation from a fake startEvent', () => {
 
-  const utils = new exportUtils(undefined);
+  const utils = new ExportUtils(undefined);
 
   it('should return an empty array', () => {
     let resultArray = utils.navigateFromStartEvent();
@@ -202,7 +202,7 @@ describe('Test element navigation from real BPMNs', () => {
     }));
 
     beforeEach(inject(function(elementRegistry) {
-      utils = new exportUtils(elementRegistry);
+      utils = new ExportUtils(elementRegistry);
       startEvent = elementRegistry.get('StartEvent_1');
     }));
 
@@ -223,7 +223,7 @@ describe('Test element navigation from real BPMNs', () => {
     }));
 
     beforeEach(inject(function(elementRegistry) {
-      utils = new exportUtils(elementRegistry);
+      utils = new ExportUtils(elementRegistry);
       startEvent = elementRegistry.get('StartEvent_1');
     }));
 
@@ -244,7 +244,7 @@ describe('Test element navigation from real BPMNs', () => {
     }));
 
     beforeEach(inject(function(elementRegistry) {
-      utils = new exportUtils(elementRegistry);
+      utils = new ExportUtils(elementRegistry);
       startEvent = elementRegistry.get('StartEvent');
     }));
 
@@ -266,7 +266,7 @@ describe('Test element navigation from real BPMNs', () => {
     }));
 
     beforeEach(inject(function(elementRegistry) {
-      utils = new exportUtils(elementRegistry);
+      utils = new ExportUtils(elementRegistry);
       startEvent = elementRegistry.get('StartEvent');
     }));
 
