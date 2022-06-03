@@ -1,6 +1,7 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const ZipPlugin = require('zip-webpack-plugin');
+const CamundaModelerWebpackPlugin = require('camunda-modeler-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
@@ -21,17 +22,19 @@ module.exports = {
             presets: [ '@babel/preset-react' ]
           }
         }
-      }, {
+      },
+      {
+        test: /\.svg$/,
+        use: 'react-svg-loader'
+      },
+      {
         test: /\.css$/i,
         use: [ 'style-loader', 'css-loader' ],
       },
-      { test: /\.(png|svg|jpe?g|gif|woff2?|ttf|eot)$/, use: [ 'file-loader' ] }
+      { test: /\.(png|jpe?g|gif|woff2?|ttf|eot)$/, use: [ 'file-loader' ] }
     ]
   },
   resolve: {
-    alias: {
-      react: 'camunda-modeler-plugin-helpers/react'
-    },
     fallback: {
       'util': false,
       'assert': false
@@ -39,6 +42,7 @@ module.exports = {
   },
   devtool: 'cheap-module-source-map',
   plugins: [
+    new CamundaModelerWebpackPlugin(),
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery'
@@ -46,7 +50,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, './node_modules/bpmn-js-documentation-viewer/assets/css/docViewer.css'),
+          from: path.resolve(__dirname, './node_modules/@sh4red/bpmn-js-documentation-viewer/assets/css/docViewer.css'),
           to: path.resolve(__dirname, './dist/')
         },
         {
@@ -65,8 +69,7 @@ module.exports = {
       pathMapper: function(assetPath) {
         if (assetPath.startsWith('client')) {
           return path.join(path.dirname(assetPath), 'client', path.basename(assetPath));
-        }
-        else if (assetPath.endsWith('.css')) {
+        } else if (assetPath.endsWith('.css')) {
           return path.join(path.dirname(assetPath), 'style', path.basename(assetPath));
         }
         return assetPath;

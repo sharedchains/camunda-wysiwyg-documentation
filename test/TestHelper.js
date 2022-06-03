@@ -5,8 +5,7 @@ import {
 } from 'bpmn-js/test/helper';
 
 insertCSS('style.css', [
-  '@import "/base/assets/css/normalize.css";',
-  '@import "/base/assets/css/bpmn-js-token-simulation.css"'
+  '@import "/base/assets/css/normalize.css";'
 ].join('\n'));
 
 insertCSS('diagram-js.css', require('diagram-js/assets/diagram-js.css'));
