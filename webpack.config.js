@@ -64,7 +64,7 @@ module.exports = {
       ]
     }),
     new ZipPlugin({
-      filename: 'camunda-wysiwyg-documentation-plugin-' + process.env.npm_package_version + '.zip',
+      filename: process.env.npm_package_name + '-' + process.env.npm_package_version + '.zip',
       pathPrefix: 'camunda-wysiwyg-documentation/',
       pathMapper: function(assetPath) {
         if (assetPath.startsWith('client')) {
