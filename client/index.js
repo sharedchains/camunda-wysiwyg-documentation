@@ -6,9 +6,9 @@ import {
 import BpmnExtensionModule from './bpmn-js-extension';
 import WysiwygFragment from './react/Documentation/WysiwygFragment';
 import ExportToolbar from './react/ExportToolbar/ExportToolbar';
-import DocViewerModule from 'bpmn-js-documentation-viewer';
+import DocViewerModule from '@sh4red/bpmn-js-documentation-viewer';
 
-import DocumentationModal from 'bpmn-js-documentation-viewer/lib/modal/ReactModalFragment';
+import DocumentationModal from '@sh4red/bpmn-js-documentation-viewer/lib/modal/ReactModalFragment';
 
 import documentationModdle from './bpmn-js-extension/propertiesProvider/moddle/documentation.json';
 

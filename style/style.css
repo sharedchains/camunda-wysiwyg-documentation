@@ -121,3 +121,22 @@ input[id$="-documentation"], input[id$="-extendedDocumentation"] {
         top: 5px;
     }
 }
+
+.export-documentation .export-button {
+    display: flex;
+    align-items: center;
+}
+
+.export-documentation hr {
+    margin: 22px 0 15px 0;
+}
+
+.export-documentation .export-button > .export-description {
+    padding-left: 12px;
+}
+
+.export-documentation .btn.active {
+    color: #fff;
+    background-color: #545b62;
+    border-color: #4e555b;
+}

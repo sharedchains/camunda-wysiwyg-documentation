@@ -1,59 +1,53 @@
-import inherits from 'inherits';
+// TODO: remove lodash
+// import { find } from 'lodash';
 
-import PropertiesActivator from 'bpmn-js-properties-panel/lib/PropertiesActivator';
-
-import { find } from 'lodash';
+import { find } from 'min-dash';
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
-import documentationOrderProps from './parts/DocumentationOrderProps';
-import extendedDocumentationProps from './parts/ExtendedDocumentationProps';
+import extendedDocumentationProps from './props/ExtendedDocumentationProps';
+import documentationOrderProps from './props/DocumentationOrderProps';
 
 const MEDIUM_PRIORITY = 5000;
 
 /**
  * Our custom provider, which integrates the extended documentation property field and overrides properties in 'export mode'
  *
- * @param eventBus
- * @param commandStack
- * @param bpmnFactory
- * @param translate
- * @param selection
- * @param propertiesProvider
- * @param elementRegistry
  * @constructor
  */
-export default function WysiwygPropertiesProvider(eventBus, commandStack, bpmnFactory, translate, selection, propertiesProvider, elementRegistry) {
-  PropertiesActivator.call(this, eventBus);
+export default class WysiwygPropertiesProvider {
 
-  const self = this;
+  constructor(propertiesPanel, injector) {
+    initEvents(injector);
+    propertiesPanel.registerProvider(200, this);
+  }
 
-  eventBus.on(TOGGLE_MODE_EVENT, MEDIUM_PRIORITY, function(context) {
-    self.exportMode = context.exportMode;
+  /**
+   * Return the groups provided for the given element.
+   *
+   * @param {DiagramElement} element
+   *
+   * @return {(Object[]) => (Object[])} groups middleware
+   */
+  getGroups(element) {
+    return groups => {
+
+      let documentationGroup = find(groups, entry => entry.id === 'documentation');
+      if (documentationGroup) {
+        documentationGroup.entries.push(...extendedDocumentationProps(element), ...documentationOrderProps(element));
+      }
+
+      return groups;
+    };
+  }
+}
+
+WysiwygPropertiesProvider.$inject = [ 'propertiesPanel', 'injector' ];
+
+function initEvents(injector) {
+  let eventBus = injector.get('eventBus');
+  let selection = injector.get('selection');
+
+  eventBus.on(TOGGLE_MODE_EVENT, MEDIUM_PRIORITY, function() {
 
     eventBus.fire('selection.changed', { oldSelection: [], newSelection: selection.get() });
   });
-
-  let camundaGetTabs = propertiesProvider.getTabs;
-  propertiesProvider.getTabs = function(element) {
-
-    const array = camundaGetTabs(element);
-    let generalTab = find(array, { id: 'general' });
-    let documentationTab = find(generalTab.groups, { id: 'documentation' });
-    if (documentationTab) {
-
-      // Adding extended documentation
-      documentationTab.entries = documentationTab.entries.concat(extendedDocumentationProps(translate, eventBus, bpmnFactory, commandStack, element));
-
-      // Adding documentation order field
-      documentationTab.entries.push(documentationOrderProps(translate, elementRegistry, eventBus, element));
-    }
-    if (self.exportMode) {
-      generalTab.groups = [ documentationTab ];
-      return [ generalTab ];
-    }
-    return array;
-  };
 }
-
-inherits(WysiwygPropertiesProvider, PropertiesActivator);
-
-WysiwygPropertiesProvider.$inject = [ 'eventBus', 'commandStack', 'bpmnFactory', 'translate', 'selection', 'propertiesProvider', 'elementRegistry' ];

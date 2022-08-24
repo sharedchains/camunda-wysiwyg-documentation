@@ -1,5 +1,4 @@
 import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
-import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 import { domify } from 'min-dom';
 import { filter, sortBy } from 'lodash';
 
@@ -19,16 +18,18 @@ const OFFSET_BOTTOM = 10,
  * Implementing documentation overlays to show element export order count in 'export mode'
  * @param eventBus
  * @param overlays
- * @param commandStack
  * @param elementRegistry
+ * @param injector
  * @constructor
  */
-export default function DocumentationOverlays(eventBus, overlays, commandStack, elementRegistry) {
+export default function DocumentationOverlays(eventBus, overlays, elementRegistry, injector) {
   const self = this;
 
   this._eventBus = eventBus;
   this._overlays = overlays;
   this._elementRegistry = elementRegistry;
+  this._injector = injector;
+
   this.overlayIds = {};
   this.exportMode = false;
 
@@ -103,7 +104,7 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
   });
   eventBus.on(REMOVE_DOCUMENTATION_ORDER_EVENT, function(context) {
     let element = context.element;
-    let bo = getBusinessObject(element);
+
     const overlayHistory = self.overlayIds[element.id];
     if (overlayHistory) {
       const overlayId = overlayHistory.overlayId;
@@ -116,8 +117,8 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
       self._overlays.remove(overlayId);
       delete self.overlayIds[element.id];
 
-      let command = cmdHelper.updateBusinessObject(element, bo, { order: undefined });
-      commandStack.execute(command.cmd, command.context);
+      const commandStack = self._injector.get('commandStack');
+      commandStack.execute('element.updateProperties', { element, properties: { order: undefined } });
     }
   });
 
@@ -128,8 +129,8 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
     if (!bo.get('order') && is(element, 'bpmn:FlowNode')) {
       let nextCounterValue = getNextDocOrder(self.counter);
 
-      let command = cmdHelper.updateBusinessObject(element, bo, { order: '' + nextCounterValue });
-      commandStack.execute(command.cmd, command.context);
+      const commandStack = self._injector.get('commandStack');
+      commandStack.execute('element.updateProperties', { element, properties: { order: '' + nextCounterValue } });
 
       addNewOverlay(element, nextCounterValue);
       self.counter = nextCounterValue;
@@ -146,8 +147,14 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
         return;
       }
 
+      const commandStack = self._injector.get('commandStack');
+
       const commands = [];
-      commands.push(cmdHelper.updateBusinessObject(element, bo, { order: undefined }));
+
+      commands.push({
+        cmd: 'element.updateProperties',
+        context: { element, properties: { order: undefined } }
+      });
 
       const overlayId = overlayHistory.overlayId;
       const removedCounter = overlayHistory.order;
@@ -165,12 +172,15 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
         return +split[0] >= removedCounter;
       }), [ 'order' ]);
       toUpdate.forEach((overlayIdObject) => {
-        let updateBo = getBusinessObject(overlayIdObject.element);
 
         let split = overlayIdObject.order.split('.');
         split[0] = +split[0] - 1;
         let newOrder = split.join('.');
-        commands.push(cmdHelper.updateBusinessObject(overlayIdObject.element, updateBo, { order: newOrder }));
+
+        commands.push({
+          cmd: 'element.updateProperties',
+          context: { element: overlayIdObject.element, properties: { order: newOrder } }
+        });
 
         self._overlays.remove(overlayIdObject.overlayId);
         overlayIdObject.overlayId = newOverlayBadgeForDocOrder(overlayIdObject.element, newOrder);
@@ -184,4 +194,4 @@ export default function DocumentationOverlays(eventBus, overlays, commandStack, 
   });
 }
 
-DocumentationOverlays.$inject = [ 'eventBus', 'overlays', 'commandStack', 'elementRegistry' ];
+DocumentationOverlays.$inject = [ 'eventBus', 'overlays', 'elementRegistry', 'injector' ];
