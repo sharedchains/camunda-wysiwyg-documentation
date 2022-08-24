@@ -6,6 +6,9 @@ All notable changes to the [camunda-wysiwyg-documentation](https://github.com/sh
 
 ___Note:__ Yet to be released changes appear here._
 
+## 1.0.0
+* `FEAT`: support Camunda Modeler 5.x.x+
+
 ## 0.2.0
 
 * `FIX`: Fixed saving documentation on tab change

@@ -1,6 +1,6 @@
 # WYSIWYG Documentation editor for Camunda Modeler
 
-[![Compatible with Camunda Modeler version 3.4](https://img.shields.io/badge/Camunda%20Modeler-3.4+-blue.svg)](https://github.com/camunda/camunda-modeler)
+[![Compatible with Camunda Modeler version 5](https://img.shields.io/badge/Camunda%20Modeler-5.0+-blue.svg)](https://github.com/camunda/camunda-modeler)
 
 A [Camunda Modeler](https://github.com/camunda/camunda-modeler) plug-in based on the [plug-in example](https://github.com/camunda/camunda-modeler-plugin-example).
 
@@ -9,6 +9,10 @@ A [Camunda Modeler](https://github.com/camunda/camunda-modeler) plug-in based on
 This plug-in enables a WYSIWYG text editor for the Documentation field, allowing a user to create HTML presentational documentation embedded inside the bpmn file.
 
 ![Screencast documentation editor](./docs/screencast.gif)
+
+## Install
+
+Extract the [release zip file](https://github.com/sharedchains/camunda-wysiwyg-documentation/releases/) to your camunda-modeler/resources/plugins folder. Super easy!
 
 ## Development Setup
 
@@ -40,6 +44,15 @@ To prepare the plug-in for release, executing all necessary steps, run:
 ```sh
 npm run all
 ```
+
+## Compatibility Notice
+
+This plugin is currently compatible with the following Camunda Modeler versions.
+
+| Camunda Modeler | Documentation Editor Plugin |
+|-----------------|-----------------------------|
+| 3.4 - 4.12      | 0.2.0                       |
+| 5.x             | 1.0 or newer                |
 
 ## Additional Resources
 
