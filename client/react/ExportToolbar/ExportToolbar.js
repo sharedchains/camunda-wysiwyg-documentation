@@ -8,11 +8,15 @@ import ExportUtils, { DIAGRAM_FLOW, DOCUMENTATION_ORDER_FLOW } from '../../utils
 
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
 
+import FileExportIcon from '../../../resources/file-export-solid.svg';
+import ExportOverlay from './ExportOverlay';
+
 const defaultState = {
   modeler: null,
   tabModeler: [],
   tabId: null,
-  exportMode: false
+  exportMode: false,
+  configOpen: false
 };
 
 /**
@@ -23,6 +27,10 @@ class ExportToolbar extends Component {
     super(props);
 
     this.state = defaultState;
+
+    this._exportButtonRef = React.createRef();
+
+    this.handleConfigClosed = this.handleConfigClosed.bind(this);
   }
 
   componentDidMount() {
@@ -61,6 +69,10 @@ class ExportToolbar extends Component {
       }
     });
   }
+
+  handleConfigClosed = () => {
+    this.setState({ configOpen: false });
+  };
 
   exportDiagram = async (modeler, flowType) => {
     const {
@@ -155,36 +167,53 @@ class ExportToolbar extends Component {
       let eventBus = activeTab.modeler.get('eventBus');
       let exportMode = !prevState.exportMode;
       eventBus.fire(TOGGLE_MODE_EVENT, {
-        exportMode: exportMode,
-        fromModeler: true
+        exportMode: exportMode
       });
       return {
         exportMode: exportMode,
-        tabModeler: [ ...tabModeler, { modeler: activeTab.modeler, tabId: tabId, exportMode: exportMode } ]
+        tabModeler: prevState.tabModeler.filter(tab => tab.tabId !== tabId).concat({ modeler: activeTab.modeler, tabId: tabId, exportMode: exportMode })
       };
     });
   };
 
   render() {
     const {
+      configOpen,
       tabModeler,
-      tabId
+      tabId,
+      exportMode
     } = this.state;
+
     const activeTab = find(tabModeler, { tabId: tabId });
+    let actions = {};
+    if (activeTab) {
+      actions = {
+        toggleExportMode: () => this.toggleExportMode(tabId),
+        exportFlow: () => this.exportDiagram(activeTab.modeler, DIAGRAM_FLOW),
+        exportOrdered: () => this.exportDiagram(activeTab.modeler, DOCUMENTATION_ORDER_FLOW)
+      };
+    }
 
     return (
       <Fragment>
-        <Fill slot="toolbar" group="9_n_exportDocumentation">
-          <button title="Export mode" type="button" className={classNames('toolbarBtn', this.state.exportMode ? 'active' : null)}
-            onClick={() => {this.toggleExportMode(tabId);}}><span className="icon-button bpmn-icon-screw-wrench"/>
+        <Fill slot="status-bar__app" group="2_wysiwyg_documentation">
+          <button title="Export mode" type="button"
+            ref={this._exportButtonRef}
+            onClick={() => this.setState({ configOpen: !configOpen })}
+            className={classNames('btn', { 'btn--active': configOpen })}>
+            <FileExportIcon/>
           </button>
-          <button title="Export on diagram flow" type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
-            this.exportDiagram(activeTab.modeler, DIAGRAM_FLOW);
-          }}/>
-          <button title="Export on documentation order" type="button" className={classNames('exportBtn', 'toolbarBtn')} onClick={() => {
-            this.exportDiagram(activeTab.modeler, DOCUMENTATION_ORDER_FLOW);
-          }}/>
         </Fill>
+        {
+          this.state.configOpen && (
+            <ExportOverlay
+              anchor={this._exportButtonRef.current}
+              onClose={this.handleConfigClosed}
+              actions={actions}
+              exportMode={exportMode}
+            />
+          )
+        }
       </Fragment>
     );
   }

@@ -1,6 +1,6 @@
 import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 
-import { orderBy } from 'lodash';
+import { sortBy } from 'lodash';
 
 /**
  * Utility class to get documentation from the element, in the right order
@@ -18,20 +18,24 @@ class ExportUtils {
   };
 
   getStartEvents = () => {
-    return orderBy(this._elementRegistry.filter((element) =>
+    return sortBy(this._elementRegistry.filter((element) =>
       is(element, 'bpmn:StartEvent') &&
       element.type !== 'label' &&
-      !is(element.parent, 'bpmn:SubProcess')), [ 'y', 'x' ], [ 'asc', 'asc' ]);
+      !is(element.parent, 'bpmn:SubProcess')), [ 'y', 'x' ]);
   };
 
   getAllElementsWithDocumentationOrder = () => {
     let elements = this._elementRegistry.filter(
       (element) => is(element, 'bpmn:FlowNode') && element.type !== 'label' && this.hasDocumentationOrder(element)
     );
-    return orderBy(elements,[ function(element) {
+
+    return sortBy(elements, [ function(element) {
       let bo = getBusinessObject(element);
-      return bo.get('order');
-    } ], [ 'asc' ]);
+      let order = bo.get('order');
+      let split = order.split('.');
+
+      return split.map(n => +n + 100000).join('.');
+    } ]);
   };
 
   notExistsDocOrder = (id, newDocOrder) => {
