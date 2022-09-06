@@ -5,6 +5,7 @@ import EditorModal from '../UI/EditorModal';
 import { EditorState, ContentState, convertToRaw } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
+import { find } from 'lodash';
 
 import { OPEN_WYSIWYG_EDITOR, SAVE_WYSIWYG_EDITOR } from '../../utils/EventHelper';
 
