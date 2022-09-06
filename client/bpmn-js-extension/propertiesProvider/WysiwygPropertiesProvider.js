@@ -1,7 +1,4 @@
-// TODO: remove lodash
-// import { find } from 'lodash';
-
-import { find } from 'min-dash';
+import { find } from 'lodash';
 import { TOGGLE_MODE_EVENT } from '../../utils/EventHelper';
 import extendedDocumentationProps from './props/ExtendedDocumentationProps';
 import documentationOrderProps from './props/DocumentationOrderProps';
